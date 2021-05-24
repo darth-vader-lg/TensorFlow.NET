@@ -9,7 +9,8 @@
     <license type="file">LICENSE.txt</license>
     <licenseUrl>https://aka.ms/deprecateLicenseUrl</licenseUrl>
     <projectUrl>https://www.tensorflow.org/</projectUrl>
-    <iconUrl>https://avatars3.githubusercontent.com/u/44989469?s=200&amp;v=4</iconUrl>
+    <repository type="git" url="https://github.com/darth-vader-lg/TensorFlow.NET.git"></repository>
+    <icon>SciSharpIcon.png</icon>
     <description>$packageId$ contains the TensorFlow C library GPU for Windows version $version$ redistributed as a NuGet package.</description>
     <releaseNotes>https://github.com/tensorflow/tensorflow/releases/tag/v$version$</releaseNotes>
     <copyright>Copyright 2019 The TensorFlow Authors. All rights reserved.</copyright>
@@ -23,5 +24,6 @@
     <file src="bin\packages\$packageId$\LICENSE.txt" target="LICENSE.txt" />
     <file src="bin\packages\$packageId$\THIRD_PARTY_NOTICES.txt" target="THIRD_PARTY_NOTICES.txt" />
     <file src="bin\packages\$packageId$\runtimes\**\*" target="runtimes" />
+    <file src="SciSharpIcon.png" target="\" />
   </files>
 </package>

@@ -9,7 +9,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
 
     <PackageAssetsPath>$(BinDir)packages\</PackageAssetsPath>
-    <PackageId>$(MSBuildProjectName)</PackageId>
+    <PackageId>LG.$(MSBuildProjectName)</PackageId>
     <PackageVersion>$(TesorFlowRedistPackageVersion)</PackageVersion>
 
     <NoBuild>true</NoBuild>
@@ -143,10 +143,10 @@
 
       <!-- copy to packaging location -->
       <FilesFromArchive Include="@(_fileFromArchive->'%(ExtractDirectory)\%(Identity)')"
-                        TargetPath="$(PackageAssetsPath)$(MSBuildProjectName)\%(PackagePath)" />
+                        TargetPath="$(PackageAssetsPath)$(PackageId)\%(PackagePath)" />
       <!-- include LICENSE that was downloaded from GitHub -->
       <FilesFromArchive Include="$(BinDir)\LICENSE"
-                        TargetPath="$(PackageAssetsPath)$(MSBuildProjectName)\LICENSE.txt" />
+                        TargetPath="$(PackageAssetsPath)$(PackageId)\LICENSE.txt" />
 
       <!-- copy to NativeAssets location, only for current RID, so that they may be used by tests -->
       <!--<FilesFromArchive Condition="'$(PackageRID)' == '%(_fileFromArchive.Runtime)'"

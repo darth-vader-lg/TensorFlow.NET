@@ -5,7 +5,7 @@
     <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
     <AssemblyName>SciSharp.Tensorflow-Cpu.Redist</AssemblyName>
 
-    <PackageId>runtime.linux-x64.SciSharp.Tensorflow-Cpu.Redist</PackageId>
+    <PackageId>runtime.linux-x64.LG.SciSharp.Tensorflow-Cpu.Redist</PackageId>
     <VersionPrefix>$(TensorFlowVersion)</VersionPrefix>
     <Authors>SciSharp team</Authors>
     <Company>SciSharp STACK</Company>

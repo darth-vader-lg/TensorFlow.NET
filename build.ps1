@@ -2,7 +2,6 @@
 Param(
     [string][Alias('c')]$configuration = "Release",
     [string]$platform = $null,
-    #[string][Alias("version-suffix")]$VersionSuffix = "",
     [string] $projects,
     [string][Alias('v')]$verbosity = "minimal",
     [bool] $warnAsError = $false,
@@ -24,11 +23,11 @@ Param(
 if($env:Platform) {
     $env:Platform=""  
 }
+
 function Print-Usage() {
     Write-Host "Common settings:"
     Write-Host "  -configuration <value>  Build configuration: 'Debug' or 'Release' (short: -c)"
     Write-Host "  -platform <value>       Platform configuration: 'x86', 'x64' or any valid Platform value to pass to msbuild"
-    Write-Host "  -version-suffix <value> Suffix for generating projects and packages"
     Write-Host "  -verbosity <value>      Msbuild verbosity: q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic] (short: -v)"
     Write-Host "  -help                   Print help and exit"
     Write-Host ""

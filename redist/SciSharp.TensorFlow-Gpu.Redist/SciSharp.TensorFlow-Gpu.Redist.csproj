@@ -7,8 +7,8 @@
     <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
     <AssemblyName>SciSharp.Tensorflow-Gpu.Redist</AssemblyName>
 
-    <PackageId>SciSharp.Tensorflow-Gpu.Redist</PackageId>
-    <VersionPrefix>$(TensorFlowVersion)</Version>
+    <PackageId>LG.SciSharp.Tensorflow-Gpu.Redist</PackageId>
+    <VersionPrefix>$(TensorFlowVersion)</VersionPrefix>
     <Authors>SciSharp team</Authors>
     <Company>SciSharp STACK</Company>
     <RepositoryUrl>https://github.com/darth-vader-lg/TensorFlow.NET</RepositoryUrl>

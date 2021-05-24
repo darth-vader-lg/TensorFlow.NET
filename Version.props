@@ -5,7 +5,7 @@
     <TensorFlowMajorVersion>2</TensorFlowMajorVersion>
     <TensorFlowMinorVersion>4</TensorFlowMinorVersion>
     <TensorFlowPatchVersion>1</TensorFlowPatchVersion>
-    <VersionSuffix>LG.1</VersionSuffix>
+    <VersionSuffix>rc.1</VersionSuffix>
   </PropertyGroup>
 
 </Project>
