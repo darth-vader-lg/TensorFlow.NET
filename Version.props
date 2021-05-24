@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+
+  <PropertyGroup>
+    <TensorFlowMajorVersion>2</TensorFlowMajorVersion>
+    <TensorFlowMinorVersion>4</TensorFlowMinorVersion>
+    <TensorFlowPatchVersion>1</TensorFlowPatchVersion>
+    <VersionSuffix>rc.1</VersionSuffix>
+  </PropertyGroup>
+
+</Project>

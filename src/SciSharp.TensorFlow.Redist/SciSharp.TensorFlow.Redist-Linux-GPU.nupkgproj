@@ -7,18 +7,16 @@
 
     <TargetArchitecture Condition="'$(TargetArchitecture)' == ''">x64</TargetArchitecture>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <TensorFlowVersion>1.14.0</TensorFlowVersion>
-    <TensorFlowMajorVersion>1</TensorFlowMajorVersion>
 
     <PackageAssetsPath>$(BinDir)packages\</PackageAssetsPath>
-    <PackageId>$(MSBuildProjectName)</PackageId>
-    <PackageVersion>$(TensorFlowVersion)</PackageVersion>
+    <PackageId>LG.$(MSBuildProjectName)</PackageId>
+    <PackageVersion>$(TensorFlowRedistPackageVersion)</PackageVersion>
 
     <NoBuild>true</NoBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
 
     <NuspecFile>Redist-Linux-GPU.nuspec</NuspecFile>
-    <NuspecProperties>packageId=$(PackageId);version=$(PackageVersion)</NuspecProperties>
+    <NuspecProperties>packageId=$(PackageId);version=$(TensorFlowRedistPackageVersion)</NuspecProperties>
     <NuspecBasePath>$(ProjDir)</NuspecBasePath>
 
     <GenerateNuspecDependsOn>CopyFilesFromArchive</GenerateNuspecDependsOn>
@@ -145,10 +143,10 @@
 
       <!-- copy to packaging location -->
       <FilesFromArchive Include="@(_fileFromArchive->'%(ExtractDirectory)\%(Identity)')"
-                        TargetPath="$(PackageAssetsPath)$(MSBuildProjectName)\%(PackagePath)" />
+                        TargetPath="$(PackageAssetsPath)$(PackageId)\%(PackagePath)" />
       <!-- include LICENSE that was downloaded from GitHub -->
       <FilesFromArchive Include="$(BinDir)\LICENSE"
-                        TargetPath="$(PackageAssetsPath)$(MSBuildProjectName)\LICENSE.txt" />
+                        TargetPath="$(PackageAssetsPath)$(PackageId)\LICENSE.txt" />
 
       <!-- copy to NativeAssets location, only for current RID, so that they may be used by tests -->
       <!--<FilesFromArchive Condition="'$(PackageRID)' == '%(_fileFromArchive.Runtime)'"
