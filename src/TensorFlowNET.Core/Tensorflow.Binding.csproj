@@ -4,14 +4,14 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>TensorFlow.NET</AssemblyName>
     <RootNamespace>Tensorflow</RootNamespace>
-    <TargetTensorFlow>2.2.0</TargetTensorFlow>
-    <Version>0.50.0</Version>
+    <TargetTensorFlow>$(TensorFlowVersion)</TargetTensorFlow>
+    <VersionPrefix>0.50.0</VersionPrefix>
     <LangVersion>8.0</LangVersion>
     <Authors>Haiping Chen, Meinrad Recheis, Eli Belash</Authors>
     <Company>SciSharp STACK</Company>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Copyright>Apache 2.0, Haiping Chen $([System.DateTime]::UtcNow.ToString(yyyy))</Copyright>
-    <RepositoryUrl>https://github.com/SciSharp/TensorFlow.NET</RepositoryUrl>
+    <RepositoryUrl>https://github.com/darth-vader-lg/TensorFlow.NET</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>http://scisharpstack.org</PackageProjectUrl>
     <PackageIconUrl>https://avatars3.githubusercontent.com/u/44989469?s=200&amp;v=4</PackageIconUrl>

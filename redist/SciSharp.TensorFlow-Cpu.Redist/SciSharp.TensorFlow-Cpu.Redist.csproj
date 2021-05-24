@@ -6,10 +6,10 @@
     <AssemblyName>SciSharp.Tensorflow-Cpu.Redist</AssemblyName>
 
     <PackageId>SciSharp.Tensorflow-Cpu.Redist</PackageId>
-    <Version>1.0.0</Version>
+    <VersionPrefix>$(TensorFlowVersion)</VersionPrefix>
     <Authors>SciSharp team</Authors>
     <Company>SciSharp STACK</Company>
-    <RepositoryUrl>https://github.com/SciSharp/TensorFlow.NET</RepositoryUrl>
+    <RepositoryUrl>https://github.com/darth-vader-lg/TensorFlow.NET</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <Description>
       Meta-package for GPU Tensoflow library runtime distribution.
@@ -17,7 +17,7 @@
     </Description>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 
-    <PackageProjectUrl>https://github.com/SciSharp/TensorFlow.NET</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/darth-vader-lg/TensorFlow.NET</PackageProjectUrl>
     <PackageTags>native;tensorflow;machine-learning;ML</PackageTags>
     <PackageOutputPath>../../packages</PackageOutputPath>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
@@ -43,11 +43,11 @@
   <PropertyGroup>
     <RestoreSources>../../packages;$(RestoreSources);https://api.nuget.org/v3/index.json</RestoreSources>
   </PropertyGroup>
-  <ItemGroup Condition="Exists('../../packages/runtime.linux-x64.SciSharp.Tensorflow-Cpu.Redist.1.0.0.nupkg')">
-    <PackageReference Include="runtime.linux-x64.SciSharp.Tensorflow-Cpu.Redist" Version="1.0.0" />
+  <ItemGroup Condition="Exists('../../packages/runtime.linux-x64.SciSharp.Tensorflow-Cpu.Redist.$(TesorFlowRedistPackageVersion).nupkg')">
+    <PackageReference Include="runtime.linux-x64.SciSharp.Tensorflow-Cpu.Redist" Version="$(TesorFlowRedistPackageVersion)" />
   </ItemGroup>
-  <ItemGroup Condition="Exists('../../packages/runtime.win-x64.SciSharp.Tensorflow-Cpu.Redist.1.0.0.nupkg')">
-    <PackageReference Include="runtime.win-x64.SciSharp.Tensorflow-Cpu.Redist" Version="1.0.0" />
+  <ItemGroup Condition="Exists('../../packages/runtime.win-x64.SciSharp.Tensorflow-Cpu.Redist.$(TesorFlowRedistPackageVersion).nupkg')">
+    <PackageReference Include="runtime.win-x64.SciSharp.Tensorflow-Cpu.Redist" Version="$(TesorFlowRedistPackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>

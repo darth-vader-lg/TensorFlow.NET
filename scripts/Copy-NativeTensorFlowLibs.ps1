@@ -135,12 +135,12 @@ function Copy-Archive {
     return $TargetPath
 }
 
-$LinuxGpuArchive = "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-gpu-linux-x86_64-1.14.0.tar.gz"
-$LinuxCpuArchive = "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-1.14.0.tar.gz"
-$LinuxFiles = @(".\libtensorflow.tar", ".\lib\libtensorflow.so", ".\lib\libtensorflow.so.1", ".\lib\libtensorflow.so.1.14.0", `
-        ".\lib\libtensorflow_framework.so", ".\lib\libtensorflow_framework.so.1", ".\lib\libtensorflow_framework.so.1.14.0")
-$WindowsGpuArchive = "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-gpu-windows-x86_64-1.14.0.zip"
-$WindowsCpuArchive = "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-windows-x86_64-1.14.0.zip"
+$LinuxGpuArchive = "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-gpu-linux-x86_64-2.4.1.tar.gz"
+$LinuxCpuArchive = "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-2.4.1.tar.gz"
+$LinuxFiles = @(".\libtensorflow.tar", ".\lib\libtensorflow.so", ".\lib\libtensorflow.so.2", ".\lib\libtensorflow.so.2.4.1", `
+        ".\lib\libtensorflow_framework.so", ".\lib\libtensorflow_framework.so.2", ".\lib\libtensorflow_framework.so.2.4.1")
+$WindowsGpuArchive = "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-gpu-windows-x86_64-2.4.1.zip"
+$WindowsCpuArchive = "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-windows-x86_64-2.4.1.zip"
 $WindowsFiles = @("lib\tensorflow.dll")
 $PackagesDirectory = [IO.Path]::Combine($PSScriptRoot, "..", "packages")
 

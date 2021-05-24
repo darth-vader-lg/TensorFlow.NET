@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
 
+  <Import Project="Version.props" />
+
   <PropertyGroup>
     <!--
       Make sure any documentation comments which are included in code get checked for syntax during the build, but do
@@ -12,6 +14,36 @@
     -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn),1573,1591,1712</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <RedistProjects>
+      runtime.linux-x64.SciSharp.TensorFlow-Cpu.Redist;
+      runtime.linux-x64.SciSharp.TensorFlow-Gpu.Redist;
+      runtime.win-x64.SciSharp.TensorFlow-Cpu.Redist;
+      runtime.win-x64.SciSharp.TensorFlow-Gpu.Redist;
+      SciSharp.TensorFlow-Cpu.Redist;
+      SciSharp.TensorFlow-Gpu.Redist;
+      SciSharp.TensorFlow.Redist;
+      SciSharp.TensorFlow.Redist-Linux-CPU;
+      SciSharp.TensorFlow.Redist-Linux-GPU;
+    </RedistProjects>
+    <_NormalizedRedistProjectName Condition="'$(MSBuildProjectName.Contains(.symbols))' == 'true'">$(MSBuildProjectName.Substring(0, $(MSBuildProjectName.IndexOf(.symbols))))</_NormalizedRedistProjectName>
+    <_NormalizedRedistProjectName Condition="'$(_NormalizedStableProjectName)' == ''">$(MSBuildProjectName)</_NormalizedRedistProjectName>
+
+    <IsRedistProject Condition="'$(RedistProjects.IndexOf($(_NormalizedRedistProjectName), StringComparison.OrdinalIgnoreCase))' != '-1'">true</IsRedistProject>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(IsRedistProject)' == 'true'">
+    <MajorVersion>$(TensorFlowMajorVersion)</MajorVersion>
+    <MinorVersion>$(TensorFlowMinorVersion)</MinorVersion>
+    <PatchVersion>$(TensorFlowPatchVersion)</PatchVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TensorFlowVersion>$(TensorFlowMajorVersion).$(TensorFlowMinorVersion).$(TensorFlowPatchVersion)</TensorFlowVersion>
+    <TesorFlowRedistPackageVersion Condition=" '$(VersionSuffix)' == '' ">$(TensorFlowVersion)</TesorFlowRedistPackageVersion>
+    <TesorFlowRedistPackageVersion Condition=" '$(VersionSuffix)' != '' ">$(TensorFlowVersion)-$(VersionSuffix)</TesorFlowRedistPackageVersion>
   </PropertyGroup>
 
 </Project>

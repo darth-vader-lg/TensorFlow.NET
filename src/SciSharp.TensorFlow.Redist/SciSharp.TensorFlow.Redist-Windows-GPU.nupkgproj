@@ -7,18 +7,16 @@
 
     <TargetArchitecture Condition="'$(TargetArchitecture)' == ''">x64</TargetArchitecture>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <TensorFlowVersion>1.14.0</TensorFlowVersion>
-    <TensorFlowMajorVersion>1</TensorFlowMajorVersion>
 
     <PackageAssetsPath>$(BinDir)packages\</PackageAssetsPath>
     <PackageId>$(MSBuildProjectName)</PackageId>
-    <PackageVersion>$(TensorFlowVersion)</PackageVersion>
+    <PackageVersion>$(TesorFlowRedistPackageVersion)</PackageVersion>
 
     <NoBuild>true</NoBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
 
     <NuspecFile>Redist-Windows-GPU.nuspec</NuspecFile>
-    <NuspecProperties>packageId=$(PackageId);version=$(PackageVersion)</NuspecProperties>
+    <NuspecProperties>packageId=$(PackageId);version=$(TesorFlowRedistPackageVersion)</NuspecProperties>
     <NuspecBasePath>$(ProjDir)</NuspecBasePath>
 
     <GenerateNuspecDependsOn>CopyFilesFromArchive</GenerateNuspecDependsOn>
@@ -38,7 +36,7 @@
     <TensorFlowConfig Include="windows"
                       FileExtension=".zip"
                       FilesFromArchive="lib\tensorflow.dll;
-                                        include\tensorflow\c\LICENSE"
+                                        LICENSE"
                       Runtime="win-x64"/>
 
     <AdditionalDownloadFile Include="https://raw.githubusercontent.com/tensorflow/tensorflow/master/LICENSE"
