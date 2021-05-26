@@ -23,6 +23,26 @@ namespace Tensorflow
     public partial class c_api
     {
         /// <summary>
+        /// Indicate a Tensorflow version above 2.4.1
+        /// </summary>
+        private static bool? isAbove2_4_1;
+
+        /// <summary>
+        /// Indicate a Tensorflow version above 2.4.1
+        /// </summary>
+        private static bool IsAbove2_4_1
+        {
+            get
+            {
+                if (isAbove2_4_1.HasValue)
+                    return isAbove2_4_1.Value;
+                var ver = new Version(Binding.tf.VERSION);
+                isAbove2_4_1 = ver > new Version("2.4.1");
+                return isAbove2_4_1.Value;
+            }
+        }
+
+        /// <summary>
         /// Allocate and return a new Tensor.
         /// </summary>
         /// <param name="dtype">TF_DataType</param>
@@ -181,32 +201,108 @@ namespace Tensorflow
         [DllImport(TensorFlowLibName)]
         public static extern unsafe ulong TF_StringEncode(byte* src, ulong src_len, byte* dst, ulong dst_len, SafeStatusHandle status);
 
-        [DllImport(TensorFlowLibName)]
-        public static extern void TF_StringInit(IntPtr t);
+        [DllImport(TensorFlowLibName, EntryPoint = "TF_StringInit")]
+        private static extern void TF_StringInit_Above_241(IntPtr t);
 
-        [DllImport(TensorFlowLibName)]
-        public static extern void TF_StringCopy(IntPtr dst, byte[] text, long size);
+        [DllImport(TensorFlowExportLibName, EntryPoint = "TF_StringInit")]
+        private static extern void TF_StringInit_Until_241(IntPtr t);
+
+        public static void TF_StringInit(IntPtr t)
+        {
+            if (IsAbove2_4_1)
+                TF_StringInit_Above_241(t);
+            else
+                TF_StringInit_Until_241(t);
+        }
+
+        [DllImport(TensorFlowLibName, EntryPoint = "TF_StringCopy")]
+        public static extern void TF_StringCopy_Above_241(IntPtr dst, byte[] text, long size);
+
+        [DllImport(TensorFlowExportLibName, EntryPoint = "TF_StringCopy")]
+        public static extern void TF_StringCopy_Until_241(IntPtr dst, byte[] text, long size);
+
+        public static void TF_StringCopy(IntPtr dst, byte[] text, long size)
+        {
+            if (IsAbove2_4_1)
+                TF_StringCopy_Above_241(dst, text, size);
+            else
+                TF_StringCopy_Until_241(dst, text, size);
+        }
 
         [DllImport(TensorFlowLibName)]
         public static extern void TF_StringCopy(IntPtr dst, string text, long size);
 
-        [DllImport(TensorFlowLibName)]
-        public static extern void TF_StringAssignView(IntPtr dst, IntPtr text, long size);
+        [DllImport(TensorFlowLibName, EntryPoint = "TF_StringAssignView")]
+        public static extern void TF_StringAssignView_Above_241(IntPtr dst, IntPtr text, long size);
 
-        [DllImport(TensorFlowLibName)]
-        public static extern IntPtr TF_StringGetDataPointer(IntPtr tst);
+        [DllImport(TensorFlowExportLibName, EntryPoint = "TF_StringAssignView")]
+        public static extern void TF_StringAssignView_Until_241(IntPtr dst, IntPtr text, long size);
 
-        [DllImport(TensorFlowLibName)]
-        public static extern TF_TString_Type TF_StringGetType(IntPtr tst);
+        public static void TF_StringAssignView(IntPtr dst, IntPtr text, long size)
+        {
+            if (IsAbove2_4_1)
+                TF_StringAssignView_Above_241(dst, text, size);
+            else
+                TF_StringAssignView_Until_241(dst, text, size);
+        }
 
-        [DllImport(TensorFlowLibName)]
-        public static extern ulong TF_StringGetSize(IntPtr tst);
+        [DllImport(TensorFlowLibName, EntryPoint = "TF_StringGetDataPointer")]
+        public static extern IntPtr TF_StringGetDataPointer_Above_241(IntPtr tst);
 
-        [DllImport(TensorFlowLibName)]
-        public static extern ulong TF_StringGetCapacity(IntPtr tst);
+        [DllImport(TensorFlowExportLibName, EntryPoint = "TF_StringGetDataPointer")]
+        public static extern IntPtr TF_StringGetDataPointer_Until_241(IntPtr tst);
 
-        [DllImport(TensorFlowLibName)]
-        public static extern void TF_StringDealloc(IntPtr tst);
+        public static IntPtr TF_StringGetDataPointer(IntPtr tst)
+        {
+            return IsAbove2_4_1 ? TF_StringGetDataPointer_Above_241(tst) : TF_StringGetDataPointer_Until_241(tst);
+        }
+
+        [DllImport(TensorFlowLibName, EntryPoint = "TF_StringGetType")]
+        public static extern TF_TString_Type TF_StringGetType_Above_241(IntPtr tst);
+
+        [DllImport(TensorFlowExportLibName, EntryPoint = "TF_StringGetType")]
+        public static extern TF_TString_Type TF_StringGetType_Until_241(IntPtr tst);
+
+        public static TF_TString_Type TF_StringGetType(IntPtr tst)
+        {
+            return IsAbove2_4_1 ? TF_StringGetType_Above_241(tst) : TF_StringGetType_Until_241(tst);
+        }
+
+        [DllImport(TensorFlowLibName, EntryPoint = "TF_StringGetSize")]
+        public static extern ulong TF_StringGetSize_Above_241(IntPtr tst);
+
+        [DllImport(TensorFlowExportLibName, EntryPoint = "TF_StringGetSize")]
+        public static extern ulong TF_StringGetSize_Until_241(IntPtr tst);
+
+        public static ulong TF_StringGetSize(IntPtr tst)
+        {
+            return IsAbove2_4_1 ? TF_StringGetSize_Above_241(tst) : TF_StringGetSize_Until_241(tst);
+        }
+
+        [DllImport(TensorFlowLibName, EntryPoint = "TF_StringGetCapacity")]
+        public static extern ulong TF_StringGetCapacity_Above_241(IntPtr tst);
+
+        [DllImport(TensorFlowExportLibName, EntryPoint = "TF_StringGetCapacity")]
+        public static extern ulong TF_StringGetCapacity_Until_241(IntPtr tst);
+
+        public static ulong TF_StringGetCapacity(IntPtr tst)
+        {
+            return IsAbove2_4_1 ? TF_StringGetCapacity_Above_241(tst) : TF_StringGetCapacity_Until_241(tst);
+        }
+
+        [DllImport(TensorFlowLibName, EntryPoint = "TF_StringDealloc")]
+        public static extern void TF_StringDealloc_Above_241(IntPtr tst);
+
+        [DllImport(TensorFlowExportLibName, EntryPoint = "TF_StringDealloc")]
+        public static extern void TF_StringDealloc_Until_241(IntPtr tst);
+
+        public static void TF_StringDealloc(IntPtr tst)
+        {
+            if (IsAbove2_4_1)
+                TF_StringDealloc_Above_241(tst);
+            else
+                TF_StringDealloc_Until_241(tst);
+        }
 
         /// <summary>
         /// Decode a string encoded using TF_StringEncode.

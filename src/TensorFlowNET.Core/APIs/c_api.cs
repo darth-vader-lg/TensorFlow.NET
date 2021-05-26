@@ -44,6 +44,7 @@ namespace Tensorflow
     public partial class c_api
     {
         public const string TensorFlowLibName = "tensorflow";
+        internal const string TensorFlowExportLibName = "Tensorflow.Exports";
 
         public static string StringPiece(IntPtr handle)
         {

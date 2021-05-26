@@ -78,7 +78,7 @@ tf.net 0.5x.x aligns with TensorFlow v2.5.x native library.</PackageReleaseNotes
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
-    <None Include="SciSharpIcon.png" Pack="true" PackagePath="\"/>
+    <None Include="SciSharpIcon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>

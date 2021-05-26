@@ -20,9 +20,7 @@ Param(
 
 # Unset 'Platform' environment variable to avoid unwanted collision in InstallDotNetCore.targets file
 # some computer has this env var defined (e.g. Some HP)
-if($env:Platform) {
-    $env:Platform=""  
-}
+if($env:Platform) { $env:Platform="" }
 
 function Print-Usage() {
     Write-Host "Common settings:"
@@ -80,6 +78,36 @@ function Build {
         @properties
 }
 
+function SetVars {
+    [CmdletBinding()]
+    param(
+        ## The path to the script to run
+        [Parameter(Mandatory = $true)]
+        [string] $Path,
+
+        ## The arguments to the script
+        [string] $ArgumentList
+    )
+
+    Set-StrictMode -Version 3
+
+    $tempFile = [IO.Path]::GetTempFileName()
+
+    ## Store the output of cmd.exe.  We also ask cmd.exe to output
+    ## the environment table after the batch file completes
+    #cmd /c " `"$Path`" $argumentList && set > `"$tempFile`" "
+    cmd.exe /c "`"$Path`" $argumentList & set > `"$tempFile`" "
+
+    ## Go through the environment variables in the temp file.
+    ## For each of them, set the variable in our local environment.
+    Get-Content $tempFile | Foreach-Object {
+        if($_ -match "^(.*?)=(.*)$")
+        {
+            Set-Content "env:\$($matches[1])" $matches[2]
+        }
+    }
+}
+
 try {
 
     if ($help -or (($null -ne $properties) -and ($properties.Contains('/help') -or $properties.Contains('/?')))) {
@@ -92,10 +120,63 @@ try {
         dotnet clean -c $configuration
         if ($clean) { exit 0 }
     }
+    
+    if (-not $env:VisualStudioVersion) {
+        $vsWhere = ${env:ProgramFiles(x86)} + "\Microsoft Visual Studio\Installer\vswhere.exe"
+        if (Test-Path -Path $vsWhere) {
+            $vsCommonTools = & $vsWhere -latest -prerelease -property installationPath
+            $vsCommonTools = $vsCommonTools + "\Common7\Tools"
+        }
+        if (-not (Test-Path -Path $vsCommonTools)) {
+            $vsCommonTools = $env:VS140COMMONTOOLS
+        }
+        if (-not (Test-Path -Path $vsCommonTools)) {
+            Write-Error "Can't find VS 2015, 2017 or 2019"
+            Write-Error "Error: Visual Studio 2015, 2017 or 2019 required"
+            exit 1
+        }
+        $env:VSCMD_START_DIR=$PSScriptRoot
+        $VsDevCmd = $vsCommonTools + "\VsDevCmd.bat"
+        SetVars($VsDevCmd)
+    }
 
+    # RunVCVars
+    if (-not $platform) { $__VCBuildArch = "x64" } else { $__VCBuildArch = $platform }
+    if ($env:VisualStudioVersion -eq "16.0") {
+        $__PlatformToolset="v142"
+        $__VSVersion="16 2019"
+        # SetVars -Path $cmd -ArgumentList "x64"
+        SetVars -Path ($env:VS160COMNTOOLS + "..\..\VC\Auxiliary\Build\vcvarsall.bat") -ArgumentList $__VCBuildArch
+    } elseif ($env:VisualStudioVersion -eq "15.0") {
+        $__PlatformToolset="v141"
+        $__VSVersion="15 2017"
+        SetVars -Path ($env:VS150COMNTOOLS + "..\..\VC\Auxiliary\Build\vcvarsall.bat") -ArgumentList $__VCBuildArch
+    } elseif ($env:VisualStudioVersion -eq "14.0") {
+        $__PlatformToolset="v140"
+        $__VSVersion="14 2015"
+        SetVars -Path ($env:VS140COMNTOOLS + "..\..\VC\vcvarsall.bat") -ArgumentList $__VCBuildArch
+    } else {
+        Write-Error "Can't find VS 2015, 2017 or 2019"
+        Write-Error "Error: Visual Studio 2015, 2017 or 2019 required"
+        exit 1
+    }
+
+    # Build the tensorflow.dll missing function's exporter
+    msbuild "src\TensorFlow.Exports\Tensorflow.Exports.vcxproj" /t:build /p:Configuration=Release #%__msbuildArgs%
+    
+    # Remove variable set by Visual Studio Environment, otherwise the build will fail
+    if($env:Platform) { $env:Platform="" }
+    $Env:VisualStudioDir = ''
+    $Env:VisualStudioEdition = ''
+    $Env:VisualStudioVersion = ''
+
+    # Pack the TensorFlow redists
     dotnet pack -c $configuration .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist.nupkgproj
     dotnet pack -c $configuration .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist-Windows-GPU.nupkgproj
+
+    # Build the solution
     Build
+
     exit 0
 }
 catch {
