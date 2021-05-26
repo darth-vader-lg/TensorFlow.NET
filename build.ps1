@@ -121,6 +121,10 @@ try {
         if ($clean) { exit 0 }
     }
     
+    # Download the Tensorflow libraries
+    dotnet build /t:GetFilesFromArchive .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist.nupkgproj
+    dotnet build /t:GetFilesFromArchive .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist-Windows-GPU.nupkgproj
+
     if (-not $env:VisualStudioVersion) {
         $vsWhere = ${env:ProgramFiles(x86)} + "\Microsoft Visual Studio\Installer\vswhere.exe"
         if (Test-Path -Path $vsWhere) {
