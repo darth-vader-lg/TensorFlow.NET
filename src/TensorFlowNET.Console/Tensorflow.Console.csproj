@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LG.SciSharp.TensorFlow.Redist" Version="$(TensorFlowRedistPackageVersion)" />
+    <PackageReference Include="$(PrefixId)SciSharp.TensorFlow.Redist" Version="$(TensorFlowRedistPackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>

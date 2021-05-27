@@ -6,14 +6,14 @@
     <LangVersion>8.0</LangVersion>
     <RootNamespace>Tensorflow.Keras</RootNamespace>
     <Platforms>AnyCPU;x64</Platforms>
-    <VersionPrefix>0.5.2</VersionPrefix>
+    <VersionPrefix>$(TensorFlowKerasVersion)</VersionPrefix>
     <Authors>Haiping Chen</Authors>
     <Product>Keras for .NET</Product>
     <Copyright>Apache 2.0, Haiping Chen 2021</Copyright>
-    <PackageId>LG.TensorFlow.Keras</PackageId>
-    <PackageProjectUrl>https://github.com/SciSharp/TensorFlow.NET</PackageProjectUrl>
+    <PackageId>$(PrefixId)TensorFlow.Keras</PackageId>
+    <PackageProjectUrl>$(PackageProjectUrl)</PackageProjectUrl>
     <PackageIcon>SciSharpIcon.png</PackageIcon>
-    <RepositoryUrl>https://github.com/darth-vader-lg/TensorFlow.NET</RepositoryUrl>
+    <RepositoryUrl>$(RepositoryUrl)</RepositoryUrl>
     <PackageReleaseNotes>Keras for .NET is a C# version of Keras ported from the python version.
 
 * Support CIFAR-10 dataset in keras.datasets.
@@ -36,8 +36,8 @@ Keras is an API designed for human beings, not machines. Keras follows best prac
     <RepositoryType>Git</RepositoryType>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>Open.snk</AssemblyOriginatorKeyFile>
-    <AssemblyVersion>0.5.2.0</AssemblyVersion>
-    <FileVersion>0.5.2.0</FileVersion>
+    <AssemblyVersion>$(TensorFlowKerasVersion).0</AssemblyVersion>
+    <FileVersion>$(TensorFlowKerasVersion).0</FileVersion>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 

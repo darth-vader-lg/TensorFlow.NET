@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <VersionPrefix>0.0.1</VersionPrefix>
+    <VersionPrefix>$(TensorFlowNETRecommendersVersion)</VersionPrefix>
     <Description>TensorFlow Recommenders is a library for building recommender system models using TensorFlow.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Platforms>AnyCPU;x64</Platforms>

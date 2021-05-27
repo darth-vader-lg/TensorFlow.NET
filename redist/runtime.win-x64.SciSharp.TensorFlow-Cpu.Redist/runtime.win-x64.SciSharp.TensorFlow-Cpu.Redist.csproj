@@ -5,11 +5,11 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <AssemblyName>SciSharp.Tensorflow-Cpu.Redist</AssemblyName>
 
-    <PackageId>runtime.win-x64.LG.SciSharp.Tensorflow-Cpu.Redist</PackageId>
+    <PackageId>runtime.win-x64.$(PrefixId)SciSharp.Tensorflow-Cpu.Redist</PackageId>
     <VersionPrefix>$(TensorFlowVersion)</VersionPrefix>
     <Authors>SciSharp team</Authors>
     <Company>SciSharp STACK</Company>
-    <RepositoryUrl>https://github.com/darth-vader-lg/TensorFlow.NET</RepositoryUrl>
+    <RepositoryUrl>$(RepositoryUrl)</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <Description>
       Distribution of the windows CPU Tensoflow library.
@@ -17,7 +17,7 @@
     </Description>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 
-    <PackageProjectUrl>https://github.com/darth-vader-lg/TensorFlow.NET</PackageProjectUrl>
+    <PackageProjectUrl>$(PackageProjectUrl)</PackageProjectUrl>
     <PackageTags>native;tensorflow;machine-learning;ML</PackageTags>
     <PackageOutputPath>../../packages</PackageOutputPath>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>

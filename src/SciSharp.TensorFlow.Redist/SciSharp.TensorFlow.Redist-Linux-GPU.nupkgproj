@@ -9,14 +9,14 @@
     <TargetFramework>netstandard2.0</TargetFramework>
 
     <PackageAssetsPath>$(BinDir)packages\</PackageAssetsPath>
-    <PackageId>LG.$(MSBuildProjectName)</PackageId>
+    <PackageId>$(PrefixId)$(MSBuildProjectName)</PackageId>
     <PackageVersion>$(TensorFlowRedistPackageVersion)</PackageVersion>
 
     <NoBuild>true</NoBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
 
     <NuspecFile>Redist-Linux-GPU.nuspec</NuspecFile>
-    <NuspecProperties>packageId=$(PackageId);version=$(TensorFlowRedistPackageVersion)</NuspecProperties>
+    <NuspecProperties>packageId=$(PackageId);version=$(TensorFlowRedistPackageVersion);repositoryType=$(RepositoryType);repositoryUrl=$(RepositoryUrl).$(RepositoryType)</NuspecProperties>
     <NuspecBasePath>$(ProjDir)</NuspecBasePath>
 
     <GenerateNuspecDependsOn>CopyFilesFromArchive</GenerateNuspecDependsOn>

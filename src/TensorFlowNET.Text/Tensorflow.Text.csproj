@@ -5,7 +5,7 @@
     <RootNamespace>Tensorflow.Text</RootNamespace>
     <AssemblyName>Tensorflow.Text</AssemblyName>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <VersionPrefix>0.0.1</VersionPrefix>
+    <VersionPrefix>$(TensorFlowNETTextVersion)</VersionPrefix>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>

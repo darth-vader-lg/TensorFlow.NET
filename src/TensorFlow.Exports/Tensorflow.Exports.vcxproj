@@ -35,6 +35,13 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\SciSharp.TensorFlow.Redist\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions Condition="$([MSBuild]::VersionGreaterThan($(TensorFlowVersion), '2.4.1'))">TENSORFLOW_ABOVE_2_4_1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -45,7 +52,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\SciSharp.TensorFlow.Redist\bin\libtensorflow-cpu-windows-x86_64-2.4.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\SciSharp.TensorFlow.Redist\bin\libtensorflow-cpu-windows-x86_64-$(TensorFlowVersion)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -54,7 +61,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\SciSharp.TensorFlow.Redist\bin\libtensorflow-cpu-windows-x86_64-2.4.1\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\SciSharp.TensorFlow.Redist\bin\libtensorflow-cpu-windows-x86_64-$(TensorFlowVersion)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

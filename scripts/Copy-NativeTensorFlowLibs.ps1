@@ -135,12 +135,22 @@ function Copy-Archive {
     return $TargetPath
 }
 
-$LinuxGpuArchive = "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-gpu-linux-x86_64-2.4.1.tar.gz"
-$LinuxCpuArchive = "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-2.4.1.tar.gz"
-$LinuxFiles = @(".\libtensorflow.tar", ".\lib\libtensorflow.so", ".\lib\libtensorflow.so.2", ".\lib\libtensorflow.so.2.4.1", `
-        ".\lib\libtensorflow_framework.so", ".\lib\libtensorflow_framework.so.2", ".\lib\libtensorflow_framework.so.2.4.1")
-$WindowsGpuArchive = "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-gpu-windows-x86_64-2.4.1.zip"
-$WindowsCpuArchive = "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-windows-x86_64-2.4.1.zip"
+# Read the TensorFlow version of the project
+[XML]$Version = Get-Content [IO.Path]::Combine($PSScriptRoot, "..", "Versions.props")
+$propertyGoup = $Version.Project.PropertyGroup.Where{$_.Name.Where{"TensorFlowMajorVersion" -match $_.Name}}
+$TensorFlowVersion = `
+    ([string]$propertyGoup.TensorFlowMajorVersion).Trim(), `
+    ([string]$propertyGoup.TensorFlowMinorVersion).Trim(), `
+    ([string]$propertyGoup.TensorFlowPatchVersion).Trim() `
+    -join '.'
+
+# Define the archives
+$LinuxGpuArchive = "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-gpu-linux-x86_64-$TensorFlowVersion.tar.gz"
+$LinuxCpuArchive = "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-$TensorFlowVersion.tar.gz"
+$LinuxFiles = @(".\libtensorflow.tar", ".\lib\libtensorflow.so", ".\lib\libtensorflow.so.2", ".\lib\libtensorflow.so.$TensorFlowVersion", `
+        ".\lib\libtensorflow_framework.so", ".\lib\libtensorflow_framework.so.2", ".\lib\libtensorflow_framework.so.$TensorFlowVersion")
+$WindowsGpuArchive = "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-gpu-windows-x86_64-$TensorFlowVersion.zip"
+$WindowsCpuArchive = "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-windows-x86_64-$TensorFlowVersion.zip"
 $WindowsFiles = @("lib\tensorflow.dll")
 $PackagesDirectory = [IO.Path]::Combine($PSScriptRoot, "..", "packages")
 

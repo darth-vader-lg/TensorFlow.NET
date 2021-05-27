@@ -7,11 +7,11 @@
     <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
     <AssemblyName>SciSharp.Tensorflow-Gpu.Redist</AssemblyName>
 
-    <PackageId>LG.SciSharp.Tensorflow-Gpu.Redist</PackageId>
+    <PackageId>$(PrefixId)SciSharp.Tensorflow-Gpu.Redist</PackageId>
     <VersionPrefix>$(TensorFlowVersion)</VersionPrefix>
     <Authors>SciSharp team</Authors>
     <Company>SciSharp STACK</Company>
-    <RepositoryUrl>https://github.com/darth-vader-lg/TensorFlow.NET</RepositoryUrl>
+    <RepositoryUrl>$(RepositoryUrl)</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <Description>
       Meta-package for GPU Tensoflow library runtime distribution.
@@ -19,7 +19,7 @@
     </Description>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 
-    <PackageProjectUrl>https://github.com/darth-vader-lg/TensorFlow.NET</PackageProjectUrl>
+    <PackageProjectUrl>$(PackageProjectUrl)</PackageProjectUrl>
     <PackageTags>native;tensorflow;machine-learning;ML</PackageTags>
     <PackageOutputPath>../../packages</PackageOutputPath>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>

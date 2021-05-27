@@ -12,6 +12,7 @@
 extern "C" {
 #endif
    
+#ifndef TENSORFLOW_ABOVE_2_4_1   
    CAPI_EXPORT extern void TF_TStringAssignView(TF_TString* dst, const char* src, size_t size)
    {
       TF_TString_AssignView(dst, src, size);
@@ -44,6 +45,7 @@ extern "C" {
    {
       TF_TString_Init(t);
    }
+#endif
 
 #ifdef __cplusplus
 }

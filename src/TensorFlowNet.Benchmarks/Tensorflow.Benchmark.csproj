@@ -36,7 +36,7 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
-    <PackageReference Include="LG.SciSharp.TensorFlow.Redist-Windows-GPU" Version="$(TensorFlowRedistPackageVersion)" />
+    <PackageReference Include="$(PrefixId)SciSharp.TensorFlow.Redist-Windows-GPU" Version="$(TensorFlowRedistPackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>

@@ -2,10 +2,27 @@
 <Project>
 
   <PropertyGroup>
+    <TensorFlowBindingVersion>0.50.0</TensorFlowBindingVersion>
+    <TensorFlowKerasVersion>0.50.2</TensorFlowKerasVersion>
+    <TensorFlowNETRecommendersVersion>0.0.1</TensorFlowNETRecommendersVersion>
+    <TensorFlowNETTextVersion>0.0.1</TensorFlowNETTextVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <TensorFlowMajorVersion>2</TensorFlowMajorVersion>
-    <TensorFlowMinorVersion>4</TensorFlowMinorVersion>
-    <TensorFlowPatchVersion>1</TensorFlowPatchVersion>
-    <VersionSuffix></VersionSuffix>
+    <TensorFlowMinorVersion>5</TensorFlowMinorVersion>
+    <TensorFlowPatchVersion>0</TensorFlowPatchVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PrefixId>LG.</PrefixId>
+    <RepositoryUrl>https://github.com/darth-vader-lg/TensorFlow.NET</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>http://scisharpstack.org</PackageProjectUrl>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <VersionSuffix>rc.1</VersionSuffix>
   </PropertyGroup>
 
 </Project>
