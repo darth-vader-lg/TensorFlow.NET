@@ -585,23 +585,21 @@ would not be rank 1.", tensor.op.get_attr("axis")));
                 else
                     return $"['{string.Join("', '", tensor.StringData().Take(25))}']";
             }
+            else if(dtype == TF_DataType.TF_VARIANT)
+            {
+                return "<unprintable>";
+            }
+            else if (dtype == TF_DataType.TF_RESOURCE)
+            {
+                return "<unprintable>";
+            }
 
             var nd = tensor.numpy();
 
             if (nd.size == 0)
                 return "[]";
 
-            switch (dtype)
-            {
-                case TF_DataType.TF_STRING:
-                    return string.Join(string.Empty, nd.ToArray<byte>()
-                        .Select(x => x < 32 || x > 127 ? "\\x" + x.ToString("x") : Convert.ToChar(x).ToString()));
-                case TF_DataType.TF_VARIANT:
-                case TF_DataType.TF_RESOURCE:
-                    return "<unprintable>";
-                default:
-                    return nd.ToString();
-            }
+            return nd.ToString();
         }
 
         public static ParsedSliceArgs ParseSlices(Slice[] slices)
@@ -680,7 +678,7 @@ would not be rank 1.", tensor.op.get_attr("axis")));
             var end = new List<Tensor>();
             var strides = new List<Tensor>();
 
-            // var index = 0;
+            var index = 0;
             var (new_axis_mask, shrink_axis_mask) = (0, 0);
             var (begin_mask, end_mask) = (0, 0);
             var ellipsis_mask = 0;
@@ -692,7 +690,7 @@ would not be rank 1.", tensor.op.get_attr("axis")));
             else
                 end.Add(stop);
 
-            // shrink_axis_mask |= (1 << index);
+            shrink_axis_mask |= (1 << index);
 
             if (step == null)
                 strides.Add(tf.constant(1, dtype: start.dtype));
