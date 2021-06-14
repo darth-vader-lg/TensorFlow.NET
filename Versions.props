@@ -2,16 +2,17 @@
 <Project>
 
   <PropertyGroup>
-    <TensorFlowBindingVersion>0.50.0</TensorFlowBindingVersion>
-    <TensorFlowKerasVersion>0.50.2</TensorFlowKerasVersion>
+    <TensorFlowBindingVersion>0.40.2</TensorFlowBindingVersion>
+    <TensorFlowKerasVersion>0.4.2</TensorFlowKerasVersion>
     <TensorFlowNETRecommendersVersion>0.0.1</TensorFlowNETRecommendersVersion>
     <TensorFlowNETTextVersion>0.0.1</TensorFlowNETTextVersion>
   </PropertyGroup>
 
   <PropertyGroup>
     <TensorFlowMajorVersion>2</TensorFlowMajorVersion>
-    <TensorFlowMinorVersion>5</TensorFlowMinorVersion>
-    <TensorFlowPatchVersion>0</TensorFlowPatchVersion>
+    <TensorFlowMinorVersion>4</TensorFlowMinorVersion>
+    <TensorFlowPatchVersion>1</TensorFlowPatchVersion>
+    <TensorFlowLibrary_Cuda10_1_SM30>https://ugiahw.am.files.1drv.com/y4m2wVvTj33h5R4hHvSXv0HuDfIrzm5p8E6htDloKrf7fzmJad0kBdZDLfG_FX7stYaosR54Iu5lb3wlNvwszcOEHX70js-JbgmiOgHdTKEOEKifIYsIOr3PdeLm4oka5Oi7tubal4xUV0H2FkZQLTp5msfxSDTop0poreDKQqxWALZ1Dalrc_u7GRR867Q-sG1-JlJtNXkKuVEx__kfRpeHA</TensorFlowLibrary_Cuda10_1_SM30>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -20,9 +21,9 @@
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>http://scisharpstack.org</PackageProjectUrl>
   </PropertyGroup>
-  
+
   <PropertyGroup>
-    <VersionSuffix>rc.1</VersionSuffix>
+    <VersionSuffix></VersionSuffix>
   </PropertyGroup>
 
 </Project>
