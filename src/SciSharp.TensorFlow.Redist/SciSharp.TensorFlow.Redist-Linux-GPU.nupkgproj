@@ -16,7 +16,13 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
 
     <NuspecFile>Redist-Linux-GPU.nuspec</NuspecFile>
-    <NuspecProperties>packageId=$(PackageId);version=$(TensorFlowRedistPackageVersion);repositoryType=$(RepositoryType);repositoryUrl=$(RepositoryUrl).$(RepositoryType)</NuspecProperties>
+    <NuspecProperties>
+      packageId=$(PackageId);
+      version=$(TensorFlowRedistPackageVersion);
+      releaseNotes='https://github.com/tensorflow/tensorflow/releases/tag/v$(TensorFlowVersion)';
+      repositoryType=$(RepositoryType);
+      repositoryUrl=$(RepositoryUrl).$(RepositoryType)
+    </NuspecProperties>
     <NuspecBasePath>$(ProjDir)</NuspecBasePath>
 
     <GenerateNuspecDependsOn>CopyFilesFromArchive</GenerateNuspecDependsOn>

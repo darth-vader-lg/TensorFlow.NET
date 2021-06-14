@@ -12,7 +12,7 @@
     <repository type="$repositoryType$" url="$repositoryUrl$"></repository>
     <icon>SciSharpIcon.png</icon>
     <description>$packageId$ contains the TensorFlow C library GPU for Windows version $version$ redistributed as a NuGet package.</description>
-    <releaseNotes>https://github.com/tensorflow/tensorflow/releases/tag/v$version$</releaseNotes>
+    <releaseNotes>$releaseNotes$</releaseNotes>
     <copyright>Copyright 2019 The TensorFlow Authors. All rights reserved.</copyright>
     <tags>TensorFlow</tags>
     <dependencies>
