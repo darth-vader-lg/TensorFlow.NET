@@ -78,8 +78,14 @@ try {
         if ($apiKey -eq "") { $key = $env:NUGET_NUPKG_PUSH_KEY } else { $key = $apiKey }
         foreach ($package in $packages) {
             $prms = @($package.FullName, "--force-english-output", "--no-symbols",  "true",  "--timeout", $timeout, "--source", $url)
-            if (-not(Test-Path -PathType Container -Path $url)) { $prms = $prms + @("--skip-duplicate") }
-            if ($key) { $prms = $prms + @("--api-key", $key) }
+            $pathInfo = [System.Uri]$url
+            if ($pathInfo.IsUnc) {
+                $prms = $prms + @("--skip-duplicate")
+                if ($key) { $prms = $prms + @("--api-key", $key) }
+            }
+            elseif (-not(Test-Path -PathType Container -Path $url)) {
+                New-Item -ItemType Directory -Path $url
+            }
             dotnet nuget push $prms
         }
     }

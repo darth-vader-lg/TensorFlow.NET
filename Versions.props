@@ -23,7 +23,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <VersionSuffix>rc1</VersionSuffix>
+    <VersionSuffix>rc.1</VersionSuffix>
   </PropertyGroup>
 
 </Project>
