@@ -3,7 +3,7 @@
 
   <PropertyGroup>
     <TensorFlowBindingVersion>0.50.0</TensorFlowBindingVersion>
-    <TensorFlowKerasVersion>0.50.2</TensorFlowKerasVersion>
+    <TensorFlowKerasVersion>0.5.3</TensorFlowKerasVersion>
     <TensorFlowNETRecommendersVersion>0.0.1</TensorFlowNETRecommendersVersion>
     <TensorFlowNETTextVersion>0.0.1</TensorFlowNETTextVersion>
   </PropertyGroup>
@@ -12,6 +12,7 @@
     <TensorFlowMajorVersion>2</TensorFlowMajorVersion>
     <TensorFlowMinorVersion>5</TensorFlowMinorVersion>
     <TensorFlowPatchVersion>0</TensorFlowPatchVersion>
+    <TensorFlowLibrary_Cuda10_1_SM30>https://onedrive.live.com/download?cid=E05DEB6F4CD91FDA%26resid=E05DEB6F4CD91FDA%21117%26authkey=AGAqn0mStPXDHLU</TensorFlowLibrary_Cuda10_1_SM30>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -20,9 +21,9 @@
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>http://scisharpstack.org</PackageProjectUrl>
   </PropertyGroup>
-  
+
   <PropertyGroup>
-    <VersionSuffix>rc.1</VersionSuffix>
+    <VersionSuffix>rc1</VersionSuffix>
   </PropertyGroup>
 
 </Project>

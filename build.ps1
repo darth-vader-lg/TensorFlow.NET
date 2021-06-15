@@ -71,6 +71,7 @@ function Build {
         /p:Configuration=$configuration `
         /p:RepoRoot=$RepoRoot `
         /p:Restore=$restore `
+        /p:RestoreFallbackFolders=.\src\SciSharp.TensorFlow.Redist\bin\$configuration `
         /p:Build=$build `
         /p:Rebuild=$rebuild `
         /p:Deploy=$deploy `
@@ -120,10 +121,11 @@ try {
         dotnet clean -c $configuration
         if ($clean) { exit 0 }
     }
-    
-    # Download the Tensorflow libraries
-    dotnet build /t:GetFilesFromArchive .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist.nupkgproj
-    dotnet build /t:GetFilesFromArchive .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist-Windows-GPU.nupkgproj
+
+    # Build and Pack the TensorFlow redists
+    dotnet pack -c $configuration .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist.nupkgproj
+    dotnet pack -c $configuration .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist-Windows-GPU.nupkgproj
+    dotnet pack -c $configuration .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist-Windows-CUDA10_1-SM30.nupkgproj
 
     if (-not $env:VisualStudioVersion) {
         $vsWhere = ${env:ProgramFiles(x86)} + "\Microsoft Visual Studio\Installer\vswhere.exe"
@@ -174,11 +176,8 @@ try {
     $Env:VisualStudioEdition = ''
     $Env:VisualStudioVersion = ''
 
-    # Pack the TensorFlow redists
-    dotnet pack -c $configuration .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist.nupkgproj
-    dotnet pack -c $configuration .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist-Windows-GPU.nupkgproj
-
     # Build the solution
+    dotnet restore -s .\src\SciSharp.TensorFlow.Redist\bin\$configuration
     Build
 
     exit 0
