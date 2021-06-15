@@ -65,12 +65,15 @@ function Build {
         $properties = $msbuildArgs
     }
 
+    if (-not($PSScriptRoot) -and $psISE) { $scriptRoot = Split-Path $psISE.CurrentFile.FullPath } else { $scriptRoot = $PSScriptRoot }
+
     dotnet build `
         $bl `
         $platformArg `
         /p:Configuration=$configuration `
         /p:RepoRoot=$RepoRoot `
         /p:Restore=$restore `
+        /p:RestoreAdditionalProjectSources=$scriptRoot\src\SciSharp.TensorFlow.Redist\bin\$configuration `
         /p:Build=$build `
         /p:Rebuild=$rebuild `
         /p:Deploy=$deploy `
@@ -167,7 +170,8 @@ try {
     }
 
     # Build the tensorflow.dll missing function's exporter
-    msbuild "src\TensorFlow.Exports\Tensorflow.Exports.vcxproj" /t:build /p:Configuration=Release #%__msbuildArgs%
+    if (-not($PSScriptRoot) -and $psISE) { $scriptRoot = Split-Path $psISE.CurrentFile.FullPath } else { $scriptRoot = $PSScriptRoot }
+    msbuild "src\TensorFlow.Exports\Tensorflow.Exports.vcxproj" /t:build /p:Configuration=$configuration /p:RestoreAdditionalProjectSources=$scriptRoot\src\SciSharp.TensorFlow.Redist\bin\$configuration
     
     # Remove variable set by Visual Studio Environment, otherwise the build will fail
     if($env:Platform) { $env:Platform="" }
@@ -176,9 +180,9 @@ try {
     $Env:VisualStudioVersion = ''
 
     # Pack the TensorFlow redists
-    dotnet pack -c $configuration .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist.nupkgproj
-    dotnet pack -c $configuration .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist-Windows-GPU.nupkgproj
-    dotnet pack -c $configuration .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist-Windows-CUDA10_1-SM30.nupkgproj
+    dotnet pack --no-restore -c $configuration .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist.nupkgproj
+    dotnet pack --no-restore -c $configuration .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist-Windows-GPU.nupkgproj
+    dotnet pack --no-restore -c $configuration .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist-Windows-CUDA10_1-SM30.nupkgproj
 
     # Build the solution
     Build
