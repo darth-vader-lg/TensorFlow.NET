@@ -43,7 +43,7 @@
                       FileExtension=".zip"
                       FilesFromArchive="lib\tensorflow.dll;
                                         LICENSE"
-                      DownloadFileName="$(MSBuildProjectName.Replace('SciSharp.TensorFlow.Redist-Windows', 'libtensorflow-gpu-windows-x86_64'))-$(TensorFlowVersion)"
+                      DownloadFileName="$(MSBuildProjectName.Replace('SciSharp.TensorFlow.Redist-Windows', 'libtensorflow-gpu-sm30-windows-x86_64'))-$(TensorFlowVersion)"
                       Runtime="win-x64"/>
 
     <AdditionalDownloadFile Include="https://raw.githubusercontent.com/tensorflow/tensorflow/master/LICENSE"
@@ -154,7 +154,7 @@
       <!-- include Wrapper for missing TensorFlow export functions -->
       <_fileFromArchive Condition="'$(OS)' == 'Windows_NT' And $([MSBuild]::VersionLessThanOrEquals($(TensorFlowVersion), '2.4.1'))"
                         Include="Tensorflow.Exports.dll"
-                        ExtractDirectory="$(MSBuildThisFileDirectory)\x64\Release"
+                        ExtractDirectory="$(MSBuildThisFileDirectory)\x64\$(Configuration)"
                         Runtime="%(TensorFlowArchive.Runtime)"
                         />
       <_fileFromArchive DestinationFile="%(FileName)%(Extension)"/>

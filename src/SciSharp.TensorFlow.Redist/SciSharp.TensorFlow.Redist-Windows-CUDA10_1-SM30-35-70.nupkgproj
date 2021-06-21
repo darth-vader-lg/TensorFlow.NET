@@ -19,7 +19,7 @@
     <NuspecProperties>
       packageId=$(PackageId);
       version=$(TensorFlowRedistPackageVersion);
-      releaseNotes=https://github.com/tensorflow/tensorflow/releases/tag/v$(TensorFlowVersion);
+      releaseNotes=Special build, from https://github.com/dart-vader-lg/tensorflow/releases/tag/v$(TensorFlowVersion), linked to Cuda 10.1 / CuDNN 8.0.5 / Compute capability 3.0, 3.5 and 7.0. For old GPU;
       repositoryType=$(RepositoryType);
       repositoryUrl=$(RepositoryUrl).$(RepositoryType)
     </NuspecProperties>
@@ -43,10 +43,12 @@
                       FileExtension=".zip"
                       FilesFromArchive="lib\tensorflow.dll;
                                         LICENSE"
+                      DownloadFileName="$(MSBuildProjectName.Replace('SciSharp.TensorFlow.Redist-Windows', 'libtensorflow-gpu-sm30-35-70-windows-x86_64'))-$(TensorFlowVersion)"
                       Runtime="win-x64"/>
 
     <AdditionalDownloadFile Include="https://raw.githubusercontent.com/tensorflow/tensorflow/master/LICENSE"
-                            DownloadFile="$(BinDir)LICENSE" />
+                            DownloadFile="$(BinDir)LICENSE"
+                            DownloadFileName="LICENSE"/>
   </ItemGroup>
 
   <Target Name="PrepareArchives">
@@ -54,13 +56,23 @@
       <!-- although we could extract all archives on all machines, mac requires a fixup which can only be run on mac 
            so we split these per-rid and join during the official build packaging.  -->
       <TensorFlowArchive
-                         Include="@(TensorFlowConfig->'https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-gpu-%(Identity)-x86_64-$(TensorFlowVersion)%(FileExtension)')" />
+                         Include="@(TensorFlowConfig->'$(TensorFlowLibrary_Cuda10_1_SM30_35_70)')" />
       <!-- set up metdata used by all targets -->
-      <TensorFlowArchive DownloadFile="$(BinDir)%(FileName)%(Extension)"
-                         DownloadShaFile="$(BinDir)%(FileName)%(Extension).sha"
-                         ExtractDirectory="$(BinDir)%(FileName)"
-                         ExtractSemaphore="$(BinDir)%(FileName)\.extracted"
-                         LocalShaFile="$(BinDir)\%(FileName)%(Extension).sha"/>
+      <TensorFlowArchive DownloadFile="$(BinDir)%(TensorFlowConfig.DownloadFileName)%(TensorFlowConfig.FileExtension)"
+                         DownloadFileName="%(TensorFlowConfig.DownloadFileName)%(TensorFlowConfig.FileExtension)"
+                         DownloadShaFile="$(BinDir)%(TensorFlowConfig.DownloadFileName)%(TensorFlowConfig.FileExtension).sha"
+                         ExtractDirectory="$(BinDir)%(TensorFlowConfig.DownloadFileName)"
+                         ExtractSemaphore="$(BinDir)%(TensorFlowConfig.DownloadFileName)\.extracted"
+                         LocalShaFile="$(BinDir)\%(TensorFlowConfig.DownloadFileName)%(TensorFlowConfig.FileExtension).sha"/>
+      <!--
+      https://kx9p0q.db.files.1drv.com/y4m8UHNu11WzNLcYcbpj2qVlqs2ATkMgZ4jvSmTcaZU8A5JVgSvvK3efTWVLF4n-iQXdH1vNI3SeaXkWR_070LdE0QdmC9cMOEfwobAh-mPcqG2qYc2aIaEXx2X0-hyoD3oIGsBKVWfByaPXcEz5dVzmOEEP_JOsjJEMhQ3wa7OXxS028othjIhj-PASoT6mUSQx5UYO9lilns9nxTffKYDLA
+      <TensorFlowArchive DownloadFile="$(BinDir)$(MSBuildProjectName).zip"
+                         DownloadFileName="$(MSBuildProjectName).zip"
+                         DownloadShaFile="$(BinDir)$(MSBuildProjectName).zip.sha"
+                         ExtractDirectory="$(BinDir)$(MSBuildProjectName)"
+                         ExtractSemaphore="$(BinDir)$(MSBuildProjectName)\.extracted"
+                         LocalShaFile="$(BinDir)\$(MSBuildProjectName).zip.sha"/>
+      -->
     </ItemGroup>
     <Message Importance="high" Text="%(TensorFlowConfig.Runtime)"/>
   </Target>
@@ -71,10 +83,10 @@
           Outputs="@(TensorFlowArchive->'%(DownloadFile)');@(AdditionalDownloadFile->'%(DownloadFile)')">
     <MakeDir Directories="$(BinDir)" />
     <ItemGroup>
-      <_downloadFiles Include="@(TensorFlowArchive);@(AdditionalDownloadFile)" Url="%(Identity)" DestinationFile="%(DownloadFile)" />
+      <_downloadFiles Include="@(TensorFlowArchive);@(AdditionalDownloadFile)" Url="%(Identity)" DestinationFile="%(DownloadFile)" DestinationFileName="%(DownloadFileName)" />
     </ItemGroup>
     <Message Importance="High" Text="Downloading '%(_downloadFiles.Identity)' to '$(BinDir)'." />
-    <DownloadFile SourceUrl="%(_downloadFiles.Identity)" DestinationFolder="$(BinDir)">
+    <DownloadFile SourceUrl="%(_downloadFiles.Identity)" DestinationFolder="$(BinDir)" DestinationFileName="%(_downloadFiles.DestinationFileName)">
       <Output TaskParameter="DownloadedFile" ItemName="Content" />
     </DownloadFile>
   </Target>

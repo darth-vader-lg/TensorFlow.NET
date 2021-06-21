@@ -4,6 +4,7 @@ Param(
     [string]$platform = $null,
     [string][Alias('k', "api-key")]$apiKey,
     [int][Alias('t')]$timeout = 3601, # Workaround for the timeout; it must not be a multiple of 60, otherwise it will be ignored
+    [switch][Alias('nr', 'no-tf-redist')]$noTFRedist,
     [string][Alias('u')]$url,
     [switch][Alias('n')]$nuget,
     [switch][Alias('g')]$github,
@@ -15,6 +16,7 @@ function Print-Usage() {
     Write-Host "  -configuration <value>  Build configuration: 'Debug' or 'Release' (short: -c)"
     Write-Host "  -platform <value>       Platform configuration: 'x86', 'x64' or any valid Platform value"
     Write-Host "  -url <value>            The url wher to publish (short: -u)"
+    Write-Host "  -no-tf-redist           Don't publish TensorFlow redist packages (short: -nr)"
     Write-Host "  -nuget                  Publish on the standard NuGet.org index (short: -n)"
     Write-Host "  -github                 Publish on the standard GitHub index (short: -g)"
     Write-Host "  -api-key <value>        The api key with write rights for publishing (short: -k)"
@@ -56,10 +58,10 @@ try {
 
     # List of project to publish
     $toPublish = ( `
-        "SciSharp.TensorFlow.Redist", `
         "TensorFlow.NET", `
         "TensorFlow.Keras" `
     )
+    if (-not $noTFRedist) { $toPublish = $toPublish + "SciSharp.TensorFlow.Redist" }
 
     # Filter
     $CanPublish = `
@@ -75,7 +77,6 @@ try {
     if ($url) {
         # Push the packages
         Write-Output "Pushing the packages on $url..."
-        if ($apiKey -eq "") { $key = $env:NUGET_NUPKG_PUSH_KEY } else { $key = $apiKey }
         foreach ($package in $packages) {
             $prms = @($package.FullName, "--force-english-output", "--no-symbols",  "true",  "--timeout", $timeout, "--source", $url)
             $pathInfo = [System.Uri]$url

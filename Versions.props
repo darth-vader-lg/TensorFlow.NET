@@ -2,7 +2,7 @@
 <Project>
 
   <PropertyGroup>
-    <TensorFlowBindingVersion>0.40.2</TensorFlowBindingVersion>
+    <TensorFlowBindingVersion>0.40.3</TensorFlowBindingVersion>
     <TensorFlowKerasVersion>0.4.2</TensorFlowKerasVersion>
     <TensorFlowNETRecommendersVersion>0.0.1</TensorFlowNETRecommendersVersion>
     <TensorFlowNETTextVersion>0.0.1</TensorFlowNETTextVersion>
@@ -12,7 +12,8 @@
     <TensorFlowMajorVersion>2</TensorFlowMajorVersion>
     <TensorFlowMinorVersion>4</TensorFlowMinorVersion>
     <TensorFlowPatchVersion>1</TensorFlowPatchVersion>
-    <TensorFlowLibrary_Cuda10_1_SM30>https://onedrive.live.com/download?cid=E05DEB6F4CD91FDA%26resid=E05DEB6F4CD91FDA%21115%26authkey=AIpEYVTUWzwJ0N4</TensorFlowLibrary_Cuda10_1_SM30>
+    <TensorFlowLibrary_Cuda10_1_SM30>https://www.dropbox.com/s/ryzag1edbmk7h1a/libtensorflow-gpu-windows-x86_64.zip?dl=1</TensorFlowLibrary_Cuda10_1_SM30>
+    <TensorFlowLibrary_Cuda10_1_SM30_35_70>https://www.dropbox.com/s/nicmx8ad9zjhigz/libtensorflow-gpu-windows-x86_64.zip?dl=1</TensorFlowLibrary_Cuda10_1_SM30_35_70>
   </PropertyGroup>
 
   <PropertyGroup>
