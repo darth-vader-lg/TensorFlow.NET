@@ -6,6 +6,7 @@ Param(
     [string][Alias('v')]$verbosity = "minimal",
     [bool] $warnAsError = $false,
     [bool] $nodeReuse = $true,
+    [switch][Alias('nr', 'no-tf-redist')]$noTFRedist,
     [switch][Alias('r')]$restore,
     [switch][Alias('b')]$build,
     [switch] $rebuild,
@@ -42,6 +43,7 @@ function Print-Usage() {
     Write-Host "Advanced settings:"
     Write-Host "  -projects <value>       Semi-colon delimited list of sln/proj's to build. Globbing is supported (*.sln)"
     Write-Host "  -warnAsError <value>    Sets warnaserror msbuild parameter ('true' or 'false')"
+    Write-Host "  -no-tf-redist           Skip the build of the TensorFlow redist packages (short: -nr)"
     Write-Host ""
 
     Write-Host "Command line arguments not listed above are passed thru to msbuild."
@@ -124,65 +126,73 @@ try {
         if ($clean) { exit 0 }
     }
     
-    # Download the Tensorflow libraries
-    dotnet build /t:GetFilesFromArchive .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist.nupkgproj
-    dotnet build /t:GetFilesFromArchive .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist-Windows-GPU.nupkgproj
-    dotnet build /t:GetFilesFromArchive .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist-Windows-CUDA10_1-SM30.nupkgproj
+    if (-not $noTFRedist) {
+        # Download the Tensorflow libraries
+        dotnet build /t:GetFilesFromArchive .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist.nupkgproj
+        dotnet build /t:GetFilesFromArchive .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist-Windows-GPU.nupkgproj
+        dotnet build /t:GetFilesFromArchive .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist-Windows-CUDA10_1-SM30.nupkgproj
+        dotnet build /t:GetFilesFromArchive .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist-Windows-CUDA10_1-SM30-35-70.nupkgproj
 
-    if (-not $env:VisualStudioVersion) {
-        $vsWhere = ${env:ProgramFiles(x86)} + "\Microsoft Visual Studio\Installer\vswhere.exe"
-        if (Test-Path -Path $vsWhere) {
-            $vsCommonTools = & $vsWhere -latest -prerelease -property installationPath
-            $vsCommonTools = $vsCommonTools + "\Common7\Tools"
+        # Find Visual Studio
+        if (-not $env:VisualStudioVersion) {
+            $vsWhere = ${env:ProgramFiles(x86)} + "\Microsoft Visual Studio\Installer\vswhere.exe"
+            if (Test-Path -Path $vsWhere) {
+                $vsCommonTools = & $vsWhere -latest -prerelease -property installationPath
+                $vsCommonTools = $vsCommonTools + "\Common7\Tools"
+            }
+            if (-not (Test-Path -Path $vsCommonTools)) {
+                $vsCommonTools = $env:VS140COMMONTOOLS
+            }
+            if (-not (Test-Path -Path $vsCommonTools)) {
+                Write-Error "Can't find VS 2015, 2017 or 2019"
+                Write-Error "Error: Visual Studio 2015, 2017 or 2019 required"
+                exit 1
+            }
+            $env:VSCMD_START_DIR=$PSScriptRoot
+            $VsDevCmd = $vsCommonTools + "\VsDevCmd.bat"
+            SetVars($VsDevCmd)
         }
-        if (-not (Test-Path -Path $vsCommonTools)) {
-            $vsCommonTools = $env:VS140COMMONTOOLS
-        }
-        if (-not (Test-Path -Path $vsCommonTools)) {
+
+        # RunVCVars
+        if (-not $platform) { $__VCBuildArch = "x64" } else { $__VCBuildArch = $platform }
+        if ($env:VisualStudioVersion -eq "16.0") {
+            $__PlatformToolset="v142"
+            $__VSVersion="16 2019"
+            # SetVars -Path $cmd -ArgumentList "x64"
+            SetVars -Path ($env:VS160COMNTOOLS + "..\..\VC\Auxiliary\Build\vcvarsall.bat") -ArgumentList $__VCBuildArch
+        } elseif ($env:VisualStudioVersion -eq "15.0") {
+            $__PlatformToolset="v141"
+            $__VSVersion="15 2017"
+            SetVars -Path ($env:VS150COMNTOOLS + "..\..\VC\Auxiliary\Build\vcvarsall.bat") -ArgumentList $__VCBuildArch
+        } elseif ($env:VisualStudioVersion -eq "14.0") {
+            $__PlatformToolset="v140"
+            $__VSVersion="14 2015"
+            SetVars -Path ($env:VS140COMNTOOLS + "..\..\VC\vcvarsall.bat") -ArgumentList $__VCBuildArch
+        } else {
             Write-Error "Can't find VS 2015, 2017 or 2019"
             Write-Error "Error: Visual Studio 2015, 2017 or 2019 required"
             exit 1
         }
-        $env:VSCMD_START_DIR=$PSScriptRoot
-        $VsDevCmd = $vsCommonTools + "\VsDevCmd.bat"
-        SetVars($VsDevCmd)
-    }
 
-    # RunVCVars
-    if (-not $platform) { $__VCBuildArch = "x64" } else { $__VCBuildArch = $platform }
-    if ($env:VisualStudioVersion -eq "16.0") {
-        $__PlatformToolset="v142"
-        $__VSVersion="16 2019"
-        # SetVars -Path $cmd -ArgumentList "x64"
-        SetVars -Path ($env:VS160COMNTOOLS + "..\..\VC\Auxiliary\Build\vcvarsall.bat") -ArgumentList $__VCBuildArch
-    } elseif ($env:VisualStudioVersion -eq "15.0") {
-        $__PlatformToolset="v141"
-        $__VSVersion="15 2017"
-        SetVars -Path ($env:VS150COMNTOOLS + "..\..\VC\Auxiliary\Build\vcvarsall.bat") -ArgumentList $__VCBuildArch
-    } elseif ($env:VisualStudioVersion -eq "14.0") {
-        $__PlatformToolset="v140"
-        $__VSVersion="14 2015"
-        SetVars -Path ($env:VS140COMNTOOLS + "..\..\VC\vcvarsall.bat") -ArgumentList $__VCBuildArch
-    } else {
-        Write-Error "Can't find VS 2015, 2017 or 2019"
-        Write-Error "Error: Visual Studio 2015, 2017 or 2019 required"
-        exit 1
-    }
-
-    # Build the tensorflow.dll missing function's exporter
-    if (-not($PSScriptRoot) -and $psISE) { $scriptRoot = Split-Path $psISE.CurrentFile.FullPath } else { $scriptRoot = $PSScriptRoot }
-    msbuild "src\TensorFlow.Exports\Tensorflow.Exports.vcxproj" /t:build /p:Configuration=$configuration /p:RestoreAdditionalProjectSources=$scriptRoot\src\SciSharp.TensorFlow.Redist\bin\$configuration
+        # Build the tensorflow.dll missing function's exporter
+        if (-not($PSScriptRoot) -and $psISE) { $scriptRoot = Split-Path $psISE.CurrentFile.FullPath } else { $scriptRoot = $PSScriptRoot }
+        msbuild "src\TensorFlow.Exports\Tensorflow.Exports.vcxproj" /t:build /p:Configuration=$configuration /p:RestoreAdditionalProjectSources=$scriptRoot\src\SciSharp.TensorFlow.Redist\bin\$configuration
     
-    # Remove variable set by Visual Studio Environment, otherwise the build will fail
-    if($env:Platform) { $env:Platform="" }
-    $Env:VisualStudioDir = ''
-    $Env:VisualStudioEdition = ''
-    $Env:VisualStudioVersion = ''
+        # Remove variable set by Visual Studio Environment, otherwise the build will fail
+        if($env:Platform) { $env:Platform="" }
+        $Env:VisualStudioDir = ''
+        $Env:VisualStudioEdition = ''
+        $Env:VisualStudioVersion = ''
 
-    # Pack the TensorFlow redists
-    dotnet pack --no-restore -c $configuration .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist.nupkgproj
-    dotnet pack --no-restore -c $configuration .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist-Windows-GPU.nupkgproj
-    dotnet pack --no-restore -c $configuration .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist-Windows-CUDA10_1-SM30.nupkgproj
+        # Pack the TensorFlow redists
+        dotnet pack --no-restore -c $configuration .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist.nupkgproj
+        dotnet pack --no-restore -c $configuration .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist-Windows-GPU.nupkgproj
+        dotnet pack --no-restore -c $configuration .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist-Windows-CUDA10_1-SM30.nupkgproj
+        dotnet pack --no-restore -c $configuration .\src\SciSharp.TensorFlow.Redist\SciSharp.TensorFlow.Redist-Windows-CUDA10_1-SM30-35-70.nupkgproj
+    }
+    else {
+        Write-Output("INFO: Skipping the build of the TensorFlow redistributable packages")
+    }
 
     # Build the solution
     Build

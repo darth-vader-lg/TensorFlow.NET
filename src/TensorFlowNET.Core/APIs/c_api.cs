@@ -44,7 +44,13 @@ namespace Tensorflow
     public partial class c_api
     {
         public const string TensorFlowLibName = "tensorflow";
-        internal const string TensorFlowExportLibName = "Tensorflow.Exports";
+#if Windows
+        internal const string TensorFlowExportLibName = "Tensorflow.Exports.dll";
+#elif Linux
+        internal const string TensorFlowExportLibName = "Tensorflow.Exports.so";
+#elif OSX
+        internal const string TensorFlowExportLibName = "Tensorflow.Exports.dylib";
+#endif
 
         public static string StringPiece(IntPtr handle)
         {

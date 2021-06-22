@@ -63,6 +63,12 @@ tf.net 0.5x.x aligns with TensorFlow v2.5.x native library.</PackageReleaseNotes
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <DefineConstants Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">$(DefineConstants);Windows</DefineConstants>
+    <DefineConstants Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">$(DefineConstants);OSX</DefineConstants>
+    <DefineConstants Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">$(DefineConstants);Linux</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="Distribute\**" />
     <Compile Remove="Models\**" />
