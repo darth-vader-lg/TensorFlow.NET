@@ -23,22 +23,22 @@ namespace Tensorflow
     public partial class c_api
     {
         /// <summary>
-        /// Indicate a Tensorflow version above 2.4.1
+        /// Indicate a Tensorflow version greater or equal to 2.5.0
         /// </summary>
-        private static bool? isAbove2_4_1;
+        private static bool? isFrom2_5_0;
 
-        /// <summary>
-        /// Indicate a Tensorflow version above 2.4.1
-        /// </summary>
-        private static bool IsAbove2_4_1
+      /// <summary>
+      /// Indicate a Tensorflow version greater or equal to 2.5.0
+      /// </summary>
+      private static bool IsFrom2_5_0
         {
             get
             {
-                if (isAbove2_4_1.HasValue)
-                    return isAbove2_4_1.Value;
+                if (isFrom2_5_0.HasValue)
+                    return isFrom2_5_0.Value;
                 var ver = new Version(Binding.tf.VERSION);
-                isAbove2_4_1 = ver > new Version("2.4.1");
-                return isAbove2_4_1.Value;
+                isFrom2_5_0 = ver >= new Version("2.5.0");
+                return isFrom2_5_0.Value;
             }
         }
 
@@ -202,106 +202,106 @@ namespace Tensorflow
         public static extern unsafe ulong TF_StringEncode(byte* src, ulong src_len, byte* dst, ulong dst_len, SafeStatusHandle status);
 
         [DllImport(TensorFlowLibName, EntryPoint = "TF_StringInit")]
-        private static extern void TF_StringInit_Above_241(IntPtr t);
+        private static extern void TF_StringInit_From_250(IntPtr t);
 
         [DllImport(TensorFlowExportLibName, EntryPoint = "TF_StringInit")]
-        private static extern void TF_StringInit_Until_241(IntPtr t);
+        private static extern void TF_StringInit_Before_250(IntPtr t);
 
         public static void TF_StringInit(IntPtr t)
         {
-            if (IsAbove2_4_1)
-                TF_StringInit_Above_241(t);
+            if (IsFrom2_5_0)
+                TF_StringInit_From_250(t);
             else
-                TF_StringInit_Until_241(t);
+                TF_StringInit_Before_250(t);
         }
 
         [DllImport(TensorFlowLibName, EntryPoint = "TF_StringCopy")]
-        public static extern void TF_StringCopy_Above_241(IntPtr dst, byte[] text, long size);
+        public static extern void TF_StringCopy_From_250(IntPtr dst, byte[] text, long size);
 
         [DllImport(TensorFlowExportLibName, EntryPoint = "TF_StringCopy")]
-        public static extern void TF_StringCopy_Until_241(IntPtr dst, byte[] text, long size);
+        public static extern void TF_StringCopy_Before_250(IntPtr dst, byte[] text, long size);
 
         public static void TF_StringCopy(IntPtr dst, byte[] text, long size)
         {
-            if (IsAbove2_4_1)
-                TF_StringCopy_Above_241(dst, text, size);
+            if (IsFrom2_5_0)
+                TF_StringCopy_From_250(dst, text, size);
             else
-                TF_StringCopy_Until_241(dst, text, size);
+                TF_StringCopy_Before_250(dst, text, size);
         }
 
         [DllImport(TensorFlowLibName)]
         public static extern void TF_StringCopy(IntPtr dst, string text, long size);
 
         [DllImport(TensorFlowLibName, EntryPoint = "TF_StringAssignView")]
-        public static extern void TF_StringAssignView_Above_241(IntPtr dst, IntPtr text, long size);
+        public static extern void TF_StringAssignView_From_250(IntPtr dst, IntPtr text, long size);
 
         [DllImport(TensorFlowExportLibName, EntryPoint = "TF_StringAssignView")]
-        public static extern void TF_StringAssignView_Until_241(IntPtr dst, IntPtr text, long size);
+        public static extern void TF_StringAssignView_Before_250(IntPtr dst, IntPtr text, long size);
 
         public static void TF_StringAssignView(IntPtr dst, IntPtr text, long size)
         {
-            if (IsAbove2_4_1)
-                TF_StringAssignView_Above_241(dst, text, size);
+            if (IsFrom2_5_0)
+                TF_StringAssignView_From_250(dst, text, size);
             else
-                TF_StringAssignView_Until_241(dst, text, size);
+                TF_StringAssignView_Before_250(dst, text, size);
         }
 
         [DllImport(TensorFlowLibName, EntryPoint = "TF_StringGetDataPointer")]
-        public static extern IntPtr TF_StringGetDataPointer_Above_241(IntPtr tst);
+        public static extern IntPtr TF_StringGetDataPointer_From_250(IntPtr tst);
 
         [DllImport(TensorFlowExportLibName, EntryPoint = "TF_StringGetDataPointer")]
-        public static extern IntPtr TF_StringGetDataPointer_Until_241(IntPtr tst);
+        public static extern IntPtr TF_StringGetDataPointer_Before_250(IntPtr tst);
 
         public static IntPtr TF_StringGetDataPointer(IntPtr tst)
         {
-            return IsAbove2_4_1 ? TF_StringGetDataPointer_Above_241(tst) : TF_StringGetDataPointer_Until_241(tst);
+            return IsFrom2_5_0 ? TF_StringGetDataPointer_From_250(tst) : TF_StringGetDataPointer_Before_250(tst);
         }
 
         [DllImport(TensorFlowLibName, EntryPoint = "TF_StringGetType")]
-        public static extern TF_TString_Type TF_StringGetType_Above_241(IntPtr tst);
+        public static extern TF_TString_Type TF_StringGetType_From_250(IntPtr tst);
 
         [DllImport(TensorFlowExportLibName, EntryPoint = "TF_StringGetType")]
-        public static extern TF_TString_Type TF_StringGetType_Until_241(IntPtr tst);
+        public static extern TF_TString_Type TF_StringGetType_Before_250(IntPtr tst);
 
         public static TF_TString_Type TF_StringGetType(IntPtr tst)
         {
-            return IsAbove2_4_1 ? TF_StringGetType_Above_241(tst) : TF_StringGetType_Until_241(tst);
+            return IsFrom2_5_0 ? TF_StringGetType_From_250(tst) : TF_StringGetType_Before_250(tst);
         }
 
         [DllImport(TensorFlowLibName, EntryPoint = "TF_StringGetSize")]
-        public static extern ulong TF_StringGetSize_Above_241(IntPtr tst);
+        public static extern ulong TF_StringGetSize_From_250(IntPtr tst);
 
         [DllImport(TensorFlowExportLibName, EntryPoint = "TF_StringGetSize")]
-        public static extern ulong TF_StringGetSize_Until_241(IntPtr tst);
+        public static extern ulong TF_StringGetSize_Before_250(IntPtr tst);
 
         public static ulong TF_StringGetSize(IntPtr tst)
         {
-            return IsAbove2_4_1 ? TF_StringGetSize_Above_241(tst) : TF_StringGetSize_Until_241(tst);
+            return IsFrom2_5_0 ? TF_StringGetSize_From_250(tst) : TF_StringGetSize_Before_250(tst);
         }
 
         [DllImport(TensorFlowLibName, EntryPoint = "TF_StringGetCapacity")]
-        public static extern ulong TF_StringGetCapacity_Above_241(IntPtr tst);
+        public static extern ulong TF_StringGetCapacity_From_250(IntPtr tst);
 
         [DllImport(TensorFlowExportLibName, EntryPoint = "TF_StringGetCapacity")]
-        public static extern ulong TF_StringGetCapacity_Until_241(IntPtr tst);
+        public static extern ulong TF_StringGetCapacity_Before_250(IntPtr tst);
 
         public static ulong TF_StringGetCapacity(IntPtr tst)
         {
-            return IsAbove2_4_1 ? TF_StringGetCapacity_Above_241(tst) : TF_StringGetCapacity_Until_241(tst);
+            return IsFrom2_5_0 ? TF_StringGetCapacity_From_250(tst) : TF_StringGetCapacity_Before_250(tst);
         }
 
         [DllImport(TensorFlowLibName, EntryPoint = "TF_StringDealloc")]
-        public static extern void TF_StringDealloc_Above_241(IntPtr tst);
+        public static extern void TF_StringDealloc_From_250(IntPtr tst);
 
         [DllImport(TensorFlowExportLibName, EntryPoint = "TF_StringDealloc")]
-        public static extern void TF_StringDealloc_Until_241(IntPtr tst);
+        public static extern void TF_StringDealloc_Before_250(IntPtr tst);
 
         public static void TF_StringDealloc(IntPtr tst)
         {
-            if (IsAbove2_4_1)
-                TF_StringDealloc_Above_241(tst);
+            if (IsFrom2_5_0)
+                TF_StringDealloc_From_250(tst);
             else
-                TF_StringDealloc_Until_241(tst);
+                TF_StringDealloc_Before_250(tst);
         }
 
         /// <summary>

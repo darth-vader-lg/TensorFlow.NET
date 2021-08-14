@@ -54,7 +54,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <PreprocessorDefinitions Condition="$([MSBuild]::VersionGreaterThan($(TensorFlowVersion), '2.4.1'))">TENSORFLOW_ABOVE_2_4_1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TensorFlowVersion), '2.5.0'))">TENSORFLOW_FROM_2_5_0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
