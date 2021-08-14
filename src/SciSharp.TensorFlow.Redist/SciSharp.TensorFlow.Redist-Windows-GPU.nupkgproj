@@ -140,7 +140,7 @@
       <!-- batch rather than transform so that we can split FilesFromArchive metadata -->
       <_fileFromArchive Include="%(TensorFlowArchive.FilesFromArchive)" ExtractDirectory="%(TensorFlowArchive.ExtractDirectory)" Runtime="%(TensorFlowArchive.Runtime)" />
       <!-- include Wrapper for missing TensorFlow export functions -->
-      <_fileFromArchive Condition="'$(OS)' == 'Windows_NT' And $([MSBuild]::VersionLessThanOrEquals($(TensorFlowVersion), '2.4.1'))"
+      <_fileFromArchive Condition="'$(OS)' == 'Windows_NT' And $([MSBuild]::VersionLessThan($(TensorFlowVersion), '2.5.0'))"
                         Include="Tensorflow.Exports.dll"
                         ExtractDirectory="$(MSBuildThisFileDirectory)\x64\$(Configuration)"
                         Runtime="%(TensorFlowArchive.Runtime)"
