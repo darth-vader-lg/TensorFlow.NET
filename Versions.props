@@ -12,7 +12,8 @@
     <TensorFlowMajorVersion>2</TensorFlowMajorVersion>
     <TensorFlowMinorVersion>5</TensorFlowMinorVersion>
     <TensorFlowPatchVersion>0</TensorFlowPatchVersion>
-    <TensorFlowLibrary_Cuda10_1_SM30>https://onedrive.live.com/download?cid=E05DEB6F4CD91FDA%26resid=E05DEB6F4CD91FDA%21117%26authkey=AGAqn0mStPXDHLU</TensorFlowLibrary_Cuda10_1_SM30>
+    <TensorFlowLibrary_Cuda10_1_SM30>https://www.dropbox.com/s/l17y4vlg9pwkchx/libtensorflow-gpu-windows-x86_64.zip?dl=1</TensorFlowLibrary_Cuda10_1_SM30>
+    <TensorFlowLibrary_Cuda10_1_SM30_35_70>https://www.dropbox.com/s/y70pd7ndcmhalg1/libtensorflow-gpu-windows-x86_64.zip?dl=1</TensorFlowLibrary_Cuda10_1_SM30_35_70>
   </PropertyGroup>
 
   <PropertyGroup>

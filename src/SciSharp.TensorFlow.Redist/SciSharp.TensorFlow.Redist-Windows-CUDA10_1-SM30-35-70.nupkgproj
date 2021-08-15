@@ -19,7 +19,7 @@
     <NuspecProperties>
       packageId=$(PackageId);
       version=$(TensorFlowRedistPackageVersion);
-      releaseNotes=Special build, from https://github.com/dart-vader-lg/tensorflow/releases/tag/v$(TensorFlowVersion), linked to Cuda 10.1 / CuDNN 8.0.5 / Compute capability 3.0, 3.5 and 7.0. For old GPU;
+      releaseNotes=Special build, from https://github.com/tensorflow/tensorflow/releases/tag/v$(TensorFlowVersion), linked to Cuda 10.1 / CuDNN 8.0.5 / Compute capability 3.0, 3.5 and 7.0. For old GPU;
       repositoryType=$(RepositoryType);
       repositoryUrl=$(RepositoryUrl).$(RepositoryType)
     </NuspecProperties>
