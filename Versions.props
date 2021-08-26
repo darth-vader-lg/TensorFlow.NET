@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <LibrariesTargetFramework>netstandard2.0</LibrariesTargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <TensorFlowMajorVersion>2</TensorFlowMajorVersion>
     <TensorFlowMinorVersion>6</TensorFlowMinorVersion>
     <TensorFlowPatchVersion>0</TensorFlowPatchVersion>

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>$(LibrariesTargetFramework)</TargetFramework>
     <AssemblyName>TensorFlow.NET</AssemblyName>
     <RootNamespace>Tensorflow</RootNamespace>
     <TargetTensorFlow>$(TensorFlowVersion)</TargetTensorFlow>
@@ -82,11 +82,13 @@ tf.net 0.6x.x aligns with TensorFlow v2.6.x native library.</PackageReleaseNotes
     <None Remove="Distribute\**" />
     <None Remove="Models\**" />
     <None Remove="runtimes\**" />
+    <Compile Remove="Range.cs" Condition="'$(LibrariesTargetFramework)' != 'netstandard2.0'" />
     <Compile Remove="Util\BindingArray2.cs" />
     <None Include="..\..\LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
+    <None Include="Range.cs" Condition="'$(LibrariesTargetFramework)' != 'netstandard2.0'" />
     <None Include="SciSharpIcon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
