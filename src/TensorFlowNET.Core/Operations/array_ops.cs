@@ -300,10 +300,7 @@ namespace Tensorflow
             return result;
         }
 
-        public static Tensor expand_dims(Tensor input, int axis = -1, string name = null, int dim = -1)
-            => expand_dims_v2(input, axis, name);
-
-        private static Tensor expand_dims_v2(Tensor input, int axis, string name = null)
+        public static Tensor expand_dims(Tensor input, int axis = -1, string name = null)
             => gen_array_ops.expand_dims(input, axis, name);
 
         /// <summary>
@@ -801,7 +798,7 @@ namespace Tensorflow
                 var output = new List<Tensor>();
                 foreach (var (i, x) in enumerate(array))
                 {
-                    var shape = s0[..i].concat(new[] { -1 }).concat(s0[(i + 1)..]);
+                    var shape = s0.Take(i).ToArray().concat(new[] { -1 }).concat(s0.Skip(i + 1).ToArray());
                     output.add(reshape(stack(x), shape));
                 }
 
