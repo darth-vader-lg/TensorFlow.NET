@@ -37,8 +37,8 @@ Keras is an API designed for human beings, not machines. Keras follows best prac
     <RepositoryType>Git</RepositoryType>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>Open.snk</AssemblyOriginatorKeyFile>
-    <AssemblyVersion>$(TensorFlowKerasVersion).0</AssemblyVersion>
-    <FileVersion>$(TensorFlowKerasVersion).0</FileVersion>
+    <AssemblyVersion>$(TensorFlowKerasVersion)</AssemblyVersion>
+    <FileVersion>$(TensorFlowKerasVersion)</FileVersion>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
