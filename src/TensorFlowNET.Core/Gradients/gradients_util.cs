@@ -234,7 +234,7 @@ namespace Tensorflow
                                         in_grad.Tag == null && // maybe a IndexedSlice
                                         t_in.dtype != TF_DataType.TF_RESOURCE)
                                     {
-                                        in_grad.set_shape(t_in.TensorShape);
+                                        in_grad.shape = t_in.shape;
                                     }
 
                                     _SetGrad(grads, t_in, in_grad);
@@ -275,7 +275,7 @@ namespace Tensorflow
                     if (y.dtype.is_complex())
                         throw new TypeAccessException($"Gradients of complex tensors must set grad_ys (y.dtype = {y.dtype})");
                     var shape = array_ops.shape(y);
-                    var constant = constant_op.constant(y.dtype == TF_DataType.TF_DOUBLE ? (object)1.0 : (object)1.0f, name: $"grad_ys_{i}");
+                    var constant = constant_op.constant(1, y.dtype, name: $"grad_ys_{i}");
                     var fill = gen_array_ops.fill(shape, constant);
                     new_grad_ys.append(fill);
                     continue;

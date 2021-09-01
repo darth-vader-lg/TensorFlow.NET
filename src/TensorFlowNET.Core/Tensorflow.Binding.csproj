@@ -1,12 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>TensorFlow.NET</AssemblyName>
     <RootNamespace>Tensorflow</RootNamespace>
     <TargetTensorFlow>$(TensorFlowVersion)</TargetTensorFlow>
     <VersionPrefix>$(TensorFlowBindingVersion)</VersionPrefix>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>enable</Nullable>
     <Authors>Haiping Chen, Meinrad Recheis, Eli Belash</Authors>
     <Company>SciSharp STACK</Company>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -20,7 +21,7 @@
 Building, training and infering deep learning models.
 https://tensorflownet.readthedocs.io</Description>
     <AssemblyVersion>$(TensorFlowBindingVersion).0</AssemblyVersion>
-    <PackageReleaseNotes>tf.net 0.20.x and above are based on tensorflow native 2.x.
+    <PackageReleaseNotes>tf.net 0.60.x and above are based on tensorflow native 2.6.0
 
 * Eager Mode is added finally.
 * tf.keras is partially working. 
@@ -32,7 +33,8 @@ TensorFlow .NET v0.3x is focused on making more Keras API works.
 Keras API is a separate package released as TensorFlow.Keras.
 
 tf.net 0.4x.x aligns with TensorFlow v2.4.1 native library.
-tf.net 0.5x.x aligns with TensorFlow v2.5.x native library.</PackageReleaseNotes>
+tf.net 0.5x.x aligns with TensorFlow v2.5.x native library.
+tf.net 0.6x.x aligns with TensorFlow v2.6.x native library.</PackageReleaseNotes>
     <FileVersion>$(TensorFlowBindingVersion).0</FileVersion>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
@@ -50,7 +52,7 @@ tf.net 0.5x.x aligns with TensorFlow v2.5.x native library.</PackageReleaseNotes
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;TRACK_TENSOR_LIFE1</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <DocumentationFile>TensorFlow.NET.xml</DocumentationFile>
   </PropertyGroup>
@@ -61,6 +63,7 @@ tf.net 0.5x.x aligns with TensorFlow v2.5.x native library.</PackageReleaseNotes
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants />
   </PropertyGroup>
 
   <PropertyGroup>
@@ -94,9 +97,8 @@ tf.net 0.5x.x aligns with TensorFlow v2.5.x native library.</PackageReleaseNotes
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MethodBoundaryAspect.Fody" Version="2.0.138" />
+    <PackageReference Include="MethodBoundaryAspect.Fody" Version="2.0.139" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
-    <PackageReference Include="NumSharp" Version="0.30.0" />
     <PackageReference Include="Protobuf.Text" Version="0.5.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
   </ItemGroup>

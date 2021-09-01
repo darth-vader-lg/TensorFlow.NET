@@ -14,7 +14,7 @@
    limitations under the License.
 ******************************************************************************/
 
-using NumSharp;
+using Tensorflow.NumPy;
 using System;
 using System.Collections.Generic;
 
@@ -70,73 +70,15 @@ namespace Tensorflow
                 if (is_op)
                 {
                     if (tensor_values.Length > 0)
-                    {
-                        switch (tensor_values[0].typecode)
-                        {
-                            case NPTypeCode.Int32:
-                                full_values.Add(float.NaN);
-                                break;
-                            case NPTypeCode.Single:
-                                full_values.Add(float.NaN);
-                                break;
-                            case NPTypeCode.Double:
-                                full_values.Add(float.NaN);
-                                break;
-                            case NPTypeCode.String:
-                                full_values.Add(float.NaN);
-                                break;
-                            case NPTypeCode.Char:
-                                full_values.Add(float.NaN);
-                                break;
-                            case NPTypeCode.Byte:
-                                full_values.Add(float.NaN);
-                                break;
-                            default:
-                                throw new NotImplementedException($"build_results tensor_values[0] {tensor_values[0].dtype.Name}");
-                        }
-                    }
+                        full_values.Add(float.NaN);
                     else
-                    {
                         full_values.Add(null);
-                    }
                 }
                 else
                 {
                     var value = tensor_values[j];
                     j += 1;
-                    if (value.ndim == 0)
-                    {
-                        switch (value.typecode)
-                        {
-                            case NPTypeCode.Int16:
-                                full_values.Add(value.GetValue<short>(0));
-                                break;
-                            case NPTypeCode.Int32:
-                                full_values.Add(value.GetValue<int>(0));
-                                break;
-                            case NPTypeCode.Int64:
-                                full_values.Add(value.GetValue<long>(0));
-                                break;
-                            case NPTypeCode.Single:
-                                full_values.Add(value.GetValue<float>(0));
-                                break;
-                            case NPTypeCode.Double:
-                                full_values.Add(value.GetValue<double>(0));
-                                break;
-                            case NPTypeCode.Boolean:
-                                full_values.Add(value.GetValue<bool>(0));
-                                break;
-                            /*case "String":
-                                full_values.Add(value.Data<byte>()[0]);
-                                break;*/
-                            default:
-                                throw new NotImplementedException($"build_results tensor_values[0] {tensor_values[0].dtype.Name}");
-                        }
-                    }
-                    else
-                    {
-                        full_values.Add(value[np.arange(0, value.shape[0])]);
-                    }
+                    full_values.Add(value);
                 }
                 i += 1;
             }

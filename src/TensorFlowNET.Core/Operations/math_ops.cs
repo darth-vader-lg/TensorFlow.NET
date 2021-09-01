@@ -14,7 +14,7 @@
    limitations under the License.
 ******************************************************************************/
 
-using NumSharp;
+using Tensorflow.NumPy;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -71,7 +71,7 @@ namespace Tensorflow
             return gen_math_ops.add_n(inputs, name: name);
         }
 
-        public static Tensor argmax(Tensor input, int dimension, TF_DataType output_type = TF_DataType.TF_INT64, string name = null)
+        public static Tensor argmax(Tensor input, Axis dimension, TF_DataType output_type = TF_DataType.TF_INT64, string name = null)
             => gen_math_ops.arg_max(input, dimension, output_type: output_type, name: name);
 
         public static Tensor round(Tensor x, string name = null)
@@ -150,21 +150,6 @@ namespace Tensorflow
                          ops.convert_to_tensor(dtype.max(), dtype: value.dtype, name: "max"));
                  return cast(value, dtype, name: name);
              });
-        }
-
-        public static Tensor cast(float x, TF_DataType dtype = TF_DataType.DtInvalid, string name = null)
-        {
-            var base_type = dtype.as_base_dtype();
-
-            return tf_with(ops.name_scope(name, "Cast", new { x }), scope =>
-            {
-                name = scope;
-                var x_tensor = ops.convert_to_tensor(x, name: "x");
-                if (x_tensor.dtype.as_base_dtype() != base_type)
-                    x_tensor = gen_math_ops.cast(x_tensor, base_type, name: name);
-
-                return x_tensor;
-            });
         }
 
         public static Tensor cumsum<T>(Tensor x, T axis = default, bool exclusive = false, bool reverse = false, string name = null)
@@ -305,20 +290,12 @@ namespace Tensorflow
         /// dimensions.Must be in the range `[-rank(input_tensor), rank(input_tensor))`.</param>
         /// <param name="keepdims"> If true, retains reduced dimensions with length 1.</param>
         /// <param name="name"> A name for the operation (optional).</param>
-        public static Tensor reduce_mean(Tensor input_tensor, int[] axis = null, bool keepdims = false, string name = null, int? reduction_indices = null)
+        public static Tensor reduce_mean(Tensor input_tensor, Axis? axis = null, bool keepdims = false, string name = null, int? reduction_indices = null)
         {
             var r = _ReductionDims(input_tensor, axis);
             var axis_tensor = axis == null ? r : ops.convert_to_tensor(axis);
             var m = gen_math_ops.mean(input_tensor, axis_tensor, keepdims, name);
             return _may_reduce_to_scalar(keepdims, axis_tensor, m);
-        }
-
-        public static Tensor reduce_mean(Tensor[] input_tensors, int? axis = null, bool keepdims = false, string name = null)
-        {
-            var r = _ReductionDims(input_tensors, axis);
-            var axis_tensor = axis == null ? r : ops.convert_to_tensor(axis.Value);
-            var m = gen_math_ops.mean(input_tensors, axis_tensor, keepdims, name);
-            return _may_reduce_to_scalar(keepdims, axis, m);
         }
 
         /// <summary>
@@ -329,7 +306,7 @@ namespace Tensorflow
         /// <param name="keepdims"></param>
         /// <param name="name"></param>
         /// <returns></returns>
-        public static Tensor reduce_prod(Tensor input_tensor, int[] axis = null, bool keepdims = false, string name = null)
+        public static Tensor reduce_prod(Tensor input_tensor, Axis? axis = null, bool keepdims = false, string name = null)
         {
             var r = _ReductionDims(input_tensor, axis);
             if (axis == null)
@@ -344,7 +321,7 @@ namespace Tensorflow
             }
         }
 
-        public static Tensor reduce_std(Tensor input_tensor, int[] axis = null, bool keepdims = false, string name = null)
+        public static Tensor reduce_std(Tensor input_tensor, Axis? axis = null, bool keepdims = false, string name = null)
         {
             if (name == null)
                 name = "reduce_std";
@@ -357,7 +334,7 @@ namespace Tensorflow
              });
         }
 
-        public static Tensor reduce_variance(Tensor input_tensor, int[] axis = null, bool keepdims = false, string name = null)
+        public static Tensor reduce_variance(Tensor input_tensor, Axis? axis = null, bool keepdims = false, string name = null)
         {
             if (name == null)
                 name = "reduce_variance";
@@ -430,6 +407,50 @@ namespace Tensorflow
         public static Tensor lgamma(Tensor x, string name = null)
             => gen_math_ops.lgamma(x, name: name);
 
+        public static Tensor linspace(Tensor start, Tensor stop, int num = 50, string name = null, int axis = 0)
+        {
+            return tf_with(ops.name_scope(name, "linspace", new { start, stop }), scope =>
+            {
+                var num_int_tensor = array_ops.constant(num);
+                var num_tensor = array_ops.constant(num, dtype: start.dtype);
+
+                var broadcast_shape = array_ops.broadcast_dynamic_shape(array_ops.shape(start), array_ops.shape(stop));
+                start = gen_array_ops.broadcast_to(start, broadcast_shape);
+                stop = gen_array_ops.broadcast_to(stop, broadcast_shape);
+
+                var expanded_start = array_ops.expand_dims(start, axis: axis);
+                var expanded_stop = array_ops.expand_dims(stop, axis: axis);
+
+                var shape = array_ops.shape(expanded_start);
+                var ndims = array_ops.shape(shape)[0];
+
+                var axis_tensor = array_ops.where_v2(constant_op.constant(axis >= 0), x: axis, y: ndims + axis);
+
+                // The purpose is to avoid having negative values when repeating.
+                var num_fill = gen_math_ops.maximum(num_int_tensor - 2, 0);
+                var n_steps = gen_math_ops.maximum(num_int_tensor - 1, 1);
+                var delta = (expanded_stop - expanded_start) / cast(n_steps, expanded_stop.dtype);
+
+                var range_end = array_ops.where_v2(num_int_tensor >= 0, n_steps, -1);
+                var desired_range = cast(range(1, range_end, dtype: dtypes.int64), delta.dtype);
+                var mask = gen_math_ops.equal(axis_tensor, range(ndims));
+                var desired_range_shape = array_ops.where_v2(mask, num_fill, 1);
+                desired_range = array_ops.reshape(desired_range, desired_range_shape);
+                var res = expanded_start + delta * desired_range;
+
+                // Add the start and endpoints to the result, and slice out the desired
+                // portion.
+                var all_tensors = new[] { expanded_start, res, expanded_stop };
+                var concatenated = array_ops.concat(all_tensors, axis: axis);
+                var begin = array_ops.zeros_like(shape);
+                var size = array_ops.where_v2(mask, num_int_tensor, shape);
+
+                return array_ops.slice(concatenated, begin, size);
+            });
+
+            throw new NotImplementedException("");
+        }
+
         /// <summary>
         /// Helper function for reduction ops.
         /// </summary>
@@ -477,7 +498,7 @@ namespace Tensorflow
         /// <param name="keepdims"></param>
         /// <param name="name"></param>
         /// <returns></returns>
-        public static Tensor reduce_all(Tensor input_tensor, int[] axis = null, bool keepdims = false, string name = null)
+        public static Tensor reduce_all(Tensor input_tensor, Axis? axis = null, bool keepdims = false, string name = null)
         {
             var all = gen_math_ops._all(input_tensor,
                     _ReductionDims(input_tensor, axis),
@@ -509,7 +530,7 @@ namespace Tensorflow
         /// dimensions.Must be in the range `[-rank(input_tensor), rank(input_tensor))`.</param>
         /// <param name="keepdims"></param>
         /// <returns> The reduced tensor.</returns>
-        public static Tensor reduce_logsumexp(Tensor input_tensor, int[] axis = null, bool keepdims = false, string name = null)
+        public static Tensor reduce_logsumexp(Tensor input_tensor, Axis axis = null, bool keepdims = false, string name = null)
         {
             return tf_with(ops.name_scope(name, "ReduceLogSumExp", new { input_tensor }), scope =>
             {
@@ -518,7 +539,7 @@ namespace Tensorflow
                 var result = gen_math_ops.log(
                 reduce_sum(
                     gen_math_ops.exp(gen_math_ops.sub(input_tensor, my_max)),
-                    axis[0],
+                    constant_op.constant(axis[0]),
                     keepdims));
                 if (!keepdims)
                 {
@@ -529,7 +550,7 @@ namespace Tensorflow
             });
         }
 
-        public static Tensor reduce_any(Tensor input_tensor, int[] axis = null, bool keepdims = false, string name = null)
+        public static Tensor reduce_any(Tensor input_tensor, Axis axis = null, bool keepdims = false, string name = null)
         {
             var r = _ReductionDims(input_tensor, axis);
             var max = (axis != null) ? gen_math_ops._any(input_tensor, axis, keepdims, name) :
@@ -537,7 +558,7 @@ namespace Tensorflow
             return _may_reduce_to_scalar(keepdims, axis, max);
         }
 
-        public static Tensor reduce_max(Tensor input_tensor, int[] axis = null, bool keepdims = false, string name = null)
+        public static Tensor reduce_max(Tensor input_tensor, Axis axis = null, bool keepdims = false, string name = null)
         {
             var r = _ReductionDims(input_tensor, axis);
             var max = (axis != null) ? gen_math_ops._max(input_tensor, axis, keepdims, name) :
@@ -545,14 +566,7 @@ namespace Tensorflow
             return _may_reduce_to_scalar(keepdims, axis, max);
         }
 
-        public static Tensor reduce_max(Tensor input_tensor, int axis, bool keepdims = false, string name = null)
-        {
-            var r = _ReductionDims(input_tensor, axis);
-            var max = gen_math_ops._max(input_tensor, r, keepdims, name);
-            return _may_reduce_to_scalar(keepdims, axis, max);
-        }
-
-        public static Tensor reduce_min(Tensor input_tensor, int[] axis = null, bool keepdims = false, string name = null)
+        public static Tensor reduce_min(Tensor input_tensor, Axis axis = null, bool keepdims = false, string name = null)
         {
             var r = _ReductionDims(input_tensor, axis);
             var min = gen_math_ops._min(input_tensor, r, keepdims, name);
@@ -598,30 +612,10 @@ namespace Tensorflow
             throw new NotImplementedException();
         }
 
-        public static Tensor reduce_sum(Tensor[] input_tensors, int? axis = null, bool keepdims = false, string name = null)
-        {
-            var dims = _ReductionDims(input_tensors, axis);
-            var m = gen_math_ops._sum(input_tensors, dims, keep_dims: keepdims, name: name);
-            return _may_reduce_to_scalar(keepdims, axis, m);
-        }
-
         public static Tensor reduce_sum(Tensor input_tensor, Tensor axis = null, bool keepdims = false, string name = null)
         {
             var r = _ReductionDims(input_tensor, axis);
             var m = gen_math_ops._sum(input_tensor, r, keep_dims: keepdims, name: name);
-            return _may_reduce_to_scalar(keepdims, axis, m);
-        }
-
-        public static Tensor reduce_sum(Tensor input_tensor, int[] axis, bool keepdims = false, string name = null)
-        {
-            var m = gen_math_ops._sum(input_tensor, axis, keep_dims: keepdims, name: name);
-            return _may_reduce_to_scalar(keepdims, axis, m);
-        }
-
-        public static Tensor reduce_sum(Tensor input_tensor, int axis, bool keepdims = false, string name = null)
-        {
-            var dims = _ReductionDims(input_tensor, axis);
-            var m = gen_math_ops._sum(input_tensor, dims, keep_dims: keepdims, name: name);
             return _may_reduce_to_scalar(keepdims, axis, m);
         }
 
@@ -635,7 +629,7 @@ namespace Tensorflow
             return output;
         }
 
-        private static Tensor _may_reduce_to_scalar(bool keepdims, int[] axis, Tensor output)
+        private static Tensor _may_reduce_to_scalar(bool keepdims, Axis axis, Tensor output)
         {
             if (!common_shapes.has_fully_defined_shape(output) &&
                 !keepdims &&
@@ -665,17 +659,7 @@ namespace Tensorflow
             }
         }
 
-        private static int _ReductionDims(Tensor x, int axis)
-        {
-            return axis;
-        }
-
-        private static Tensor _ReductionDims(Tensor[] x, int? axis = null, string name = null)
-        {
-            return range(0, array_ops.rank(x));
-        }
-
-        private static Tensor _ReductionDims(Tensor x, int[] axis)
+        private static Tensor _ReductionDims(Tensor x, Axis? axis)
         {
             if (axis != null)
             {
@@ -717,7 +701,7 @@ namespace Tensorflow
                 return tf.Context.ExecuteOp("Pow", name, new ExecuteOpArgs(x_tensor, y_tensor));
             });
 
-        public static Tensor range(object start, object limit = null, object delta = null, TF_DataType dtype = TF_DataType.DtInvalid, string name = "range")
+        public static Tensor range(object start, object limit = null, object delta = null, TF_DataType? dtype = null, string name = "range")
         {
             if (limit == null)
             {
@@ -725,16 +709,14 @@ namespace Tensorflow
                 start = 0;
             }
 
-            if (delta == null)
-                delta = 1;
+            var dtype1 = dtype ?? limit.GetDataType();
 
             return tf_with(ops.name_scope(name, "Range", new { start, limit, delta }), scope =>
             {
                 name = scope;
-                var start1 = ops.convert_to_tensor(start, name: "start", dtype: dtype);
-                var limit1 = ops.convert_to_tensor(limit, name: "limit", dtype: dtype);
-                var delta1 = ops.convert_to_tensor(delta, name: "delta", dtype: dtype);
-
+                var start1 = ops.convert_to_tensor(start, name: "start", dtype: dtype1);
+                var limit1 = ops.convert_to_tensor(limit, name: "limit", dtype: dtype1);
+                var delta1 = ops.convert_to_tensor(delta ?? 1, name: "delta", dtype: dtype1);
                 return gen_math_ops.range(start1, limit1, delta1, name);
             });
         }
@@ -787,6 +769,18 @@ namespace Tensorflow
                 if (transpose_b && adjoint_b)
                     throw new ValueError("Only one of transpose_b and adjoint_b can be True.");
 
+                if(adjoint_a)
+                {
+                    a = conj(a);
+                    transpose_a = true;
+                }
+
+                if (adjoint_b)
+                {
+                    b = conj(b);
+                    transpose_b = true;
+                }
+
                 result = gen_math_ops.mat_mul(a, b, transpose_a, transpose_b, name);
             });
 
@@ -812,7 +806,7 @@ namespace Tensorflow
              Tensor maxlength = null,
              TF_DataType dtype = TF_DataType.TF_INT32,
              string name = null,
-             TensorShape axis = null,
+             Shape axis = null,
              bool binary_output = false)
             => tf_with(ops.name_scope(name, "bincount"), scope =>
             {
@@ -858,9 +852,9 @@ namespace Tensorflow
         {
             Tensor _tensordot_reshape(Tensor a, int[] axes, bool flipped = false)
             {
-                if (a.TensorShape.is_fully_defined() && isinstance(axes, (typeof(List<object>), typeof(Tuple))))
+                if (a.shape.IsFullyDefined && isinstance(axes, (typeof(List<object>), typeof(Tuple))))
                 {
-                    var shape_a = a.TensorShape.as_list();
+                    var shape_a = a.shape.dims;
 
                     // axes
                     int iter = 0;
@@ -883,14 +877,14 @@ namespace Tensorflow
                     // free_dims
                     int[] free_dims = { };
                     foreach (int i in free)
-                        free_dims[free_dims.Length] = shape_a[i];
+                        free_dims[free_dims.Length] = (int)shape_a[i];
 
                     int prod_free = (int)np.prod(free_dims);
 
                     // prod_axes
                     int[] prod_axes_pre = { };
                     foreach (int i in axes)
-                        prod_axes_pre[prod_axes_pre.Length] = shape_a[i];
+                        prod_axes_pre[prod_axes_pre.Length] = (int)shape_a[i];
                     int prod_axes = (int)np.prod(prod_axes_pre);
 
                     // perm
@@ -902,11 +896,11 @@ namespace Tensorflow
                                                                  + ops.convert_to_tensor(list(axes));
 
                     // new_shape
-                    TensorShape new_shape;
+                    Shape new_shape;
                     if (flipped)
-                        new_shape = new TensorShape(new int[] { prod_axes, prod_free });
+                        new_shape = new Shape(new int[] { prod_axes, prod_free });
                     else
-                        new_shape = new TensorShape(new int[] { prod_free, prod_axes });
+                        new_shape = new Shape(new int[] { prod_free, prod_axes });
                 }
 
                 throw new NotImplementedException("_tensordot_reshape");

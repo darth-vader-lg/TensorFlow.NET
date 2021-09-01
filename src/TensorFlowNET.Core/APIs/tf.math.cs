@@ -21,6 +21,9 @@ namespace Tensorflow
         public MathApi math { get; } = new MathApi();
         public class MathApi
         {
+            public Tensor argmax(Tensor input, Axis axis = null, string name = null, int? dimension = null, TF_DataType output_type = TF_DataType.TF_INT64)
+                => gen_math_ops.arg_max(input, axis, name: name, output_type: output_type);
+
             public Tensor log(Tensor x, string name = null)
                 => gen_math_ops.log(x, name);
 
@@ -32,6 +35,9 @@ namespace Tensorflow
             /// <returns></returns>
             public Tensor erf(Tensor x, string name = null)
                 => math_ops.erf(x, name);
+
+            public Tensor sum(Tensor x, Axis? axis = null, string name = null)
+                => math_ops.reduce_sum(x, axis: axis, name: name);
 
             /// <summary>
             /// 
@@ -50,7 +56,7 @@ namespace Tensorflow
                 Tensor maxlength = null,
                 TF_DataType dtype = TF_DataType.TF_INT32,
                 string name = null,
-                TensorShape axis = null,
+                Shape axis = null,
                 bool binary_output = false)
                 => math_ops.bincount(arr, weights: weights, minlength: minlength, maxlength: maxlength,
                     dtype: dtype, name: name, axis: axis, binary_output: binary_output);
@@ -242,10 +248,7 @@ namespace Tensorflow
         public Tensor log1p(Tensor x, string name = null)
             => gen_math_ops.log1p(x, name);
 
-        public Tensor logical_and(Tensor x, Tensor y, string name = null)
-            => gen_math_ops.logical_and(x, y, name);
-
-        public Tensor logical_and(bool x, bool y, string name = null)
+        public Tensor logical_and<T>(T x, T y, string name = null)
             => gen_math_ops.logical_and(x, y, name);
 
         public Tensor logical_not(Tensor x, string name = null)
@@ -327,7 +330,7 @@ namespace Tensorflow
             => gen_math_ops.log(x, name);
 
         public Tensor equal(Tensor x, Tensor y, string name = null)
-            => gen_math_ops.equal(x, y, name);
+            => gen_math_ops.equal(x, y, name: name);
 
         /// <summary>
         /// Computes arctangent of `y/x` element-wise, respecting signs of the arguments.
@@ -453,7 +456,7 @@ namespace Tensorflow
         public static Tensor truediv(Tensor x, Tensor y, string name = null)
             => math_ops.truediv(x, y, name: name);
 
-        public Tensor range(object start, object limit = null, object delta = null, TF_DataType dtype = TF_DataType.DtInvalid, string name = "range")
+        public Tensor range(object start, object limit = null, object delta = null, TF_DataType? dtype = null, string name = "range")
             => math_ops.range(start, limit: limit, delta: delta, dtype: dtype, name: name);
 
         public Tensor real(Tensor input, string name = null)
@@ -467,11 +470,8 @@ namespace Tensorflow
         /// <param name="keepdims">If true, retains reduced dimensions with length 1.</param>
         /// <param name="name"></param>
         /// <returns>The reduced tensor.</returns>
-        public Tensor reduce_any(Tensor input_tensor, int[] axis = null, bool keepdims = false, string name = null)
+        public Tensor reduce_any(Tensor input_tensor, Axis? axis = null, bool keepdims = false, string name = null)
             => math_ops.reduce_any(input_tensor, axis: axis, keepdims: keepdims, name: name);
-
-        public Tensor reduce_any(Tensor input_tensor, int axis = 0, bool keepdims = false, string name = null)
-            => math_ops.reduce_any(input_tensor, axis: new[] { axis }, keepdims: keepdims, name: name);
 
         /// <summary>
         /// Computes the "logical and" of elements across dimensions of a tensor.
@@ -481,7 +481,7 @@ namespace Tensorflow
         /// <param name="keepdims"></param>
         /// <param name="name"></param>
         /// <returns>The reduced tensor.</returns>
-        public Tensor reduce_all(Tensor input_tensor, int[] axis = null, bool keepdims = false, string name = null)
+        public Tensor reduce_all(Tensor input_tensor, Axis? axis = null, bool keepdims = false, string name = null)
             => math_ops.reduce_all(input_tensor, axis: axis, keepdims: keepdims, name: name);
 
         /// <summary>
@@ -492,19 +492,8 @@ namespace Tensorflow
         /// <param name="keepdims"></param>
         /// <param name="name"></param>
         /// <returns></returns>
-        public Tensor reduce_prod(Tensor input_tensor, int[] axis = null, bool keepdims = false, string name = null)
+        public Tensor reduce_prod(Tensor input_tensor, Axis? axis = null, bool keepdims = false, string name = null)
             => math_ops.reduce_prod(input_tensor, axis: axis, keepdims: keepdims, name: name);
-
-        /// <summary>
-        /// Computes the sum of elements across dimensions of a tensor.
-        /// </summary>
-        /// <param name="input_tensors"></param>
-        /// <param name="axis"></param>
-        /// <param name="keepdims"></param>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public Tensor reduce_sum(Tensor[] input_tensors, int? axis = null, bool keepdims = false, string name = null)
-            => math_ops.reduce_sum(input_tensors, axis: axis, keepdims: keepdims, name: name);
 
         /// <summary>
         /// Computes the sum of elements across dimensions of a tensor.
@@ -512,22 +501,14 @@ namespace Tensorflow
         /// <param name="input"></param>
         /// <param name="axis"></param>
         /// <returns></returns>
-        public Tensor reduce_sum(Tensor input, int? axis = null, int? reduction_indices = null,
+        public Tensor reduce_sum(Tensor input, Axis? axis = null, Axis? reduction_indices = null,
             bool keepdims = false, string name = null)
         {
-            if (!axis.HasValue && reduction_indices.HasValue && !keepdims)
-                return math_ops.reduce_sum(input, reduction_indices.Value);
-            else if (axis.HasValue && !reduction_indices.HasValue && !keepdims)
-                return math_ops.reduce_sum(input, axis.Value);
-            else if (axis.HasValue && !reduction_indices.HasValue && keepdims)
-                return math_ops.reduce_sum(input, keepdims: keepdims, axis: axis.Value, name: name);
+            if(keepdims)
+                return math_ops.reduce_sum(input, axis: constant_op.constant(axis ?? reduction_indices), keepdims: keepdims, name: name);
             else
-                return math_ops.reduce_sum(input, keepdims: keepdims, name: name);
+                return math_ops.reduce_sum(input, axis: constant_op.constant(axis ?? reduction_indices));
         }
-
-        public Tensor reduce_sum(Tensor input, TensorShape axis, int? reduction_indices = null,
-            bool keepdims = false, string name = null)
-            => math_ops.reduce_sum(input, axis, keepdims: keepdims, name: name);
 
         /// <summary>
         /// Computes the maximum of elements across dimensions of a tensor.
@@ -537,19 +518,16 @@ namespace Tensorflow
         /// <param name="keepdims"></param>
         /// <param name="name"></param>
         /// <returns></returns>
-        public Tensor reduce_max(Tensor input_tensor, int[] axis = null, bool keepdims = false, string name = null)
+        public Tensor reduce_max(Tensor input_tensor, Axis? axis = null, bool keepdims = false, string name = null)
             => math_ops.reduce_max(input_tensor, axis, keepdims, name);
 
-        public Tensor reduce_max(Tensor input_tensor, int axis, bool keepdims = false, string name = null)
-            => math_ops.reduce_max(input_tensor, axis, keepdims, name);
-
-        public Tensor reduce_min(Tensor input_tensor, int[] axis = null, bool keepdims = false, string name = null)
+        public Tensor reduce_min(Tensor input_tensor, Axis? axis = null, bool keepdims = false, string name = null)
             => math_ops.reduce_min(input_tensor, axis, keepdims, name);
 
-        public Tensor reduce_std(Tensor input_tensor, int[] axis = null, bool keepdims = false, string name = null)
+        public Tensor reduce_std(Tensor input_tensor, Axis? axis = null, bool keepdims = false, string name = null)
             => math_ops.reduce_std(input_tensor, axis, keepdims, name);
 
-        public Tensor reduce_variance(Tensor input_tensor, int[] axis = null, bool keepdims = false, string name = null)
+        public Tensor reduce_variance(Tensor input_tensor, Axis? axis = null, bool keepdims = false, string name = null)
             => math_ops.reduce_variance(input_tensor, axis, keepdims, name);
 
         public Tensor sigmoid<T>(T x, string name = null)
@@ -558,26 +536,17 @@ namespace Tensorflow
         public Tensor sum(Tensor input, int axis, bool keep_dims = false, string name = null)
             => gen_math_ops._sum(input, axis, keep_dims: keep_dims, name: name);
 
-        public Tensor reduce_mean(Tensor input_tensors, int axis, bool keepdims = false, string name = null)
-            => math_ops.reduce_mean(input_tensors, axis: new[] { axis }, keepdims: keepdims, name: name);
-
-        public Tensor reduce_mean(Tensor input_tensor, int[] axis = null, bool keepdims = false, string name = null, int? reduction_indices = null)
+        public Tensor reduce_mean(Tensor input_tensor, Axis? axis = null, bool keepdims = false, string name = null, int? reduction_indices = null)
             => math_ops.reduce_mean(input_tensor, axis: axis, keepdims: keepdims, name: name, reduction_indices: reduction_indices);
-
-        public Tensor reduce_mean(Tensor[] input_tensors, int? axis = null, bool keepdims = false, string name = null)
-            => math_ops.reduce_mean(input_tensors, axis: axis, keepdims: keepdims, name: name);
 
         public Tensor round(Tensor x, string name = null)
             => gen_math_ops.round(x, name: name);
 
-        public Tensor cast(Tensor x, TF_DataType dtype = TF_DataType.DtInvalid, string name = null)
+        public Tensor cast(Tensor x, TF_DataType dtype, string name = null)
             => math_ops.cast(x, dtype, name);
 
         public Tensor cumsum(Tensor x, int axis = 0, bool exclusive = false, bool reverse = false, string name = null)
             => math_ops.cumsum(x, axis: axis, exclusive: exclusive, reverse: reverse, name: name);
-
-        public Tensor argmax(Tensor input, int axis = -1, string name = null, int? dimension = null, TF_DataType output_type = TF_DataType.TF_INT64)
-            => gen_math_ops.arg_max(input, axis, name: name, output_type: output_type);
 
         public Tensor square(Tensor x, string name = null)
             => gen_math_ops.square(x, name: name);

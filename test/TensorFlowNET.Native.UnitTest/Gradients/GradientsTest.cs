@@ -1,5 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NumSharp;
+using Tensorflow.NumPy;
 using System;
 using Tensorflow.Util;
 
@@ -52,7 +52,7 @@ namespace Tensorflow.Native.UnitTest
                     bool ret = TF_GetCode(s) == TF_OK;
                     EXPECT_EQ(TF_OK, TF_GetCode(s));
                     if (ret)
-                        graph_def = GraphDef.Parser.ParseFrom(buffer.DangerousMemoryBlock.Stream());
+                        graph_def = GraphDef.Parser.ParseFrom(buffer.ToArray());
                     return ret;
                 }
             }
@@ -226,7 +226,7 @@ namespace Tensorflow.Native.UnitTest
             //long[] dims = { 2, 2 };
             //Tensor t = c_api.TF_AllocateTensor(TF_FLOAT, dims, 2, sizeof(float) * 4);
             //Marshal.Copy(values, 0, t, 4);
-            Tensor t = new Tensor(new NDArray(values).reshape(2, 2));
+            Tensor t = np.array(values).reshape((2, 2));
             return t;
         }
 

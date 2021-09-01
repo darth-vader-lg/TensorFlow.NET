@@ -37,7 +37,7 @@ namespace Tensorflow.Keras.Layers
 
             var channel_axis = _get_channel_axis();
             var input_dim = input_shape[-1];
-            var kernel_shape = new TensorShape(kernel_size[0], kernel_size[1], filters, input_dim);
+            var kernel_shape = new Shape(kernel_size[0], kernel_size[1], filters, input_dim);
 
             kernel = add_weight(name: "kernel",
                 shape: kernel_shape,
@@ -62,10 +62,10 @@ namespace Tensorflow.Keras.Layers
             if (data_format == "channels_first")
                 (h_axis, w_axis) = (2, 3);
             var (height, width) = (-1, -1);
-            if(inputs.shape.rank > -1)
+            if(inputs.shape.ndim > -1)
             {
                 var dims = inputs.shape.dims;
-                (height, width) = (dims[h_axis], dims[w_axis]);
+                (height, width) = ((int)dims[h_axis], (int)dims[w_axis]);
             }
             var (kernel_h, kernel_w) = kernel_size;
             var (stride_h, stride_w) = strides;
@@ -74,18 +74,18 @@ namespace Tensorflow.Keras.Layers
 
             // Infer the dynamic output shape:
             var out_height = conv_utils.deconv_output_length(height,
-                                                 kernel_h,
+                                                 (int)kernel_h,
                                                  padding: padding,
                                                  output_padding: out_pad_h,
-                                                 stride: stride_h,
-                                                 dilation: dilation_rate[0]);
+                                                 stride: (int)stride_h,
+                                                 dilation: (int)dilation_rate[0]);
 
             var out_width = conv_utils.deconv_output_length(width,
-                                                kernel_w,
+                                                (int)kernel_w,
                                                 padding: padding,
                                                 output_padding: out_pad_w,
-                                                stride: stride_w,
-                                                dilation: dilation_rate[1]);
+                                                stride: (int)stride_w,
+                                                dilation: (int)dilation_rate[1]);
 
             Tensor output_shape_tensor;
             if (data_format == "channels_first")
@@ -105,7 +105,7 @@ namespace Tensorflow.Keras.Layers
             if (!tf.Context.executing_eagerly())
             {
                 var out_shape = ComputeOutputShape(inputs.shape);
-                outputs.set_shape(out_shape);
+                outputs.shape = out_shape;
             }
 
             if (use_bias)
@@ -117,7 +117,7 @@ namespace Tensorflow.Keras.Layers
             return outputs;
         }
 
-        public override TensorShape ComputeOutputShape(TensorShape input_shape)
+        public override Shape ComputeOutputShape(Shape input_shape)
         {
             var output_shape = input_shape.dims;
             var (c_axis, h_axis, w_axis) = (3, 1, 2);
@@ -130,21 +130,21 @@ namespace Tensorflow.Keras.Layers
             var (out_pad_h, out_pad_w) = (-1, -1);
             output_shape[c_axis] = filters;
             output_shape[h_axis] = conv_utils.deconv_output_length(
-                output_shape[h_axis],
-                kernel_h,
+                (int)output_shape[h_axis],
+                (int)kernel_h,
                 padding: padding,
                 output_padding: out_pad_h,
-                stride: stride_h,
-                dilation: dilation_rate[0]);
+                stride: (int)stride_h,
+                dilation: (int)dilation_rate[0]);
             output_shape[w_axis] = conv_utils.deconv_output_length(
-                output_shape[w_axis],
-                kernel_w,
+                (int)output_shape[w_axis],
+                (int)kernel_w,
                 padding: padding,
                 output_padding: out_pad_w,
-                stride: stride_w,
-                dilation: dilation_rate[1]);
+                stride: (int)stride_w,
+                dilation: (int)dilation_rate[1]);
 
-            return new TensorShape(output_shape);
+            return new Shape(output_shape);
         }
     }
 }

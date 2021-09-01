@@ -1,4 +1,4 @@
-﻿using NumSharp;
+﻿using Tensorflow.NumPy;
 using System;
 using System.Diagnostics;
 
@@ -10,14 +10,14 @@ namespace Tensorflow
         public int EpochsCompleted { get; private set; }
         public int IndexInEpoch { get; private set; }
 
-        public MnistDataSet(NDArray images, NDArray labels, Type dataType, bool reshape)
+        public MnistDataSet(NDArray images, NDArray labels, TF_DataType dataType, bool reshape)
         {
             EpochsCompleted = 0;
             IndexInEpoch = 0;
 
-            NumOfExamples = images.shape[0];
+            NumOfExamples = (int)images.dims[0];
 
-            images = images.reshape(images.shape[0], images.shape[1] * images.shape[2]);
+            // images = images.reshape((images.dims[0], images.dims[1] * images.dims[2]));
             images = images.astype(dataType);
             // for debug np.multiply performance
             var sw = new Stopwatch();

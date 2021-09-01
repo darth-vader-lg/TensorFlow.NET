@@ -1,6 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
-using NumSharp;
+using Tensorflow.NumPy;
 using System;
 using System.Collections;
 using System.Linq;
@@ -60,6 +60,20 @@ namespace TensorFlowNET.UnitTest
         {
             double eps = 1e-16f;
             Assert.IsTrue(Math.Abs(expected - actual) < eps * Math.Max(1.0f, Math.Abs(expected)), $"{msg}: expected {expected} vs actual {actual}");
+        }
+
+        public void AssetSequenceEqual(float[] expected, float[] actual)
+        {
+            float eps = 1e-5f;
+            for (int i = 0; i < expected.Length; i++)
+                Assert.IsTrue(Math.Abs(expected[i] - actual[i]) < eps * Math.Max(1.0f, Math.Abs(expected[i])), $"expected {expected} vs actual {actual}");
+        }
+
+        public void AssetSequenceEqual(double[] expected, double[] actual)
+        {
+            double eps = 1e-5f;
+            for (int i = 0; i < expected.Length; i++)
+                Assert.IsTrue(Math.Abs(expected[i] - actual[i]) < eps * Math.Max(1.0f, Math.Abs(expected[i])), $"expected {expected} vs actual {actual}");
         }
 
         public void assertEqual(object given, object expected)
@@ -327,6 +341,9 @@ namespace TensorFlowNET.UnitTest
 
         #endregion
 
-
+        public void AssetSequenceEqual<T>(T[] a, T[] b)
+        {
+            Assert.IsTrue(Enumerable.SequenceEqual(a, b));
+        }
     }
 }

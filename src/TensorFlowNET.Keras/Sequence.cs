@@ -14,8 +14,7 @@
    limitations under the License.
 ******************************************************************************/
 
-using NumSharp;
-using NumSharp.Utilities;
+using Tensorflow.NumPy;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -55,26 +54,22 @@ namespace Tensorflow.Keras
             if (value == null)
                 value = 0f;
 
-            var type = getNPType(dtype);
-            var nd = new NDArray(type, new Shape(length.Count(), maxlen.Value), true);
+            var type = dtypes.tf_dtype_from_name(dtype);
+            var nd = np.zeros((length.Count(), maxlen.Value), dtype: type);
 
-            for (int i = 0; i < nd.shape[0]; i++)
+            for (int i = 0; i < nd.dims[0]; i++)
             {
                 var s = sequences.ElementAt(i);
                 if (s.Length > maxlen.Value)
                 {
-                    s = (truncating == "pre") ? s.Slice(s.Length - maxlen.Value, s.Length) : s.Slice(0, maxlen.Value);
+                    s = (truncating == "pre") ? s.Skip(s.Length - maxlen.Value).ToArray() : s.Take(maxlen.Value).ToArray();
                 }
                 var sliceString = (padding == "pre") ? $"{i},{maxlen - s.Length}:" : $"{i},:{s.Length}";
-                nd[sliceString] = np.array(s);
+                var slices = sliceString.Split(',').Select(x => new Slice(x)).ToArray();
+                nd[slices] = np.array(s);
             }
 
             return nd;
-        }
-
-        private Type getNPType(string typeName)
-        {
-            return System.Type.GetType("NumSharp.np,NumSharp").GetField(typeName).GetValue(null) as Type;
         }
     }
 }

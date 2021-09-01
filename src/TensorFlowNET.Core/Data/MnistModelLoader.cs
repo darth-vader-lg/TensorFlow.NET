@@ -1,4 +1,4 @@
-﻿using NumSharp;
+﻿using Tensorflow.NumPy;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -82,15 +82,15 @@ namespace Tensorflow
 
             var testLabels = ExtractLabels(Path.Combine(setting.TrainDir, Path.GetFileNameWithoutExtension(TEST_LABELS)), one_hot: setting.OneHot, limit: setting.TestSize);
 
-            var end = trainImages.shape[0];
+            var end = trainImages.dims[0];
 
             var validationSize = setting.ValidationSize;
 
             var validationImages = trainImages[np.arange(validationSize)];
             var validationLabels = trainLabels[np.arange(validationSize)];
 
-            trainImages = trainImages[np.arange(validationSize, end)];
-            trainLabels = trainLabels[np.arange(validationSize, end)];
+            trainImages = trainImages[np.arange(validationSize, (int)end)];
+            trainLabels = trainLabels[np.arange(validationSize, (int)end)];
 
             var dtype = setting.DataType;
             var reshape = setting.ReShape;
@@ -123,9 +123,7 @@ namespace Tensorflow
 
                 bytestream.Read(buf, 0, buf.Length);
 
-                var data = np.frombuffer(buf, np.@byte);
-                data = data.reshape(num_images, rows, cols, 1);
-
+                var data = np.frombuffer(buf, (num_images, rows * cols), np.uint8);
                 return data;
             }
         }
@@ -148,7 +146,7 @@ namespace Tensorflow
 
                 bytestream.Read(buf, 0, buf.Length);
 
-                var labels = np.frombuffer(buf, np.uint8);
+               var labels = np.frombuffer(buf, new Shape(num_items), np.uint8);
 
                 if (one_hot)
                     return DenseToOneHot(labels, num_classes);
@@ -159,14 +157,14 @@ namespace Tensorflow
 
         private NDArray DenseToOneHot(NDArray labels_dense, int num_classes)
         {
-            var num_labels = labels_dense.shape[0];
-            var index_offset = np.arange(num_labels) * num_classes;
-            var labels_one_hot = np.zeros(num_labels, num_classes);
-            var labels = labels_dense.Data<byte>();
+            var num_labels = (int)labels_dense.dims[0];
+            // var index_offset = np.arange(num_labels) * num_classes;
+            var labels_one_hot = np.zeros((num_labels, num_classes));
+            var labels = labels_dense.ToArray<byte>();
             for (int row = 0; row < num_labels; row++)
             {
                 var col = labels[row];
-                labels_one_hot.SetData(1.0, row, col);
+                labels_one_hot[row, col] = 1.0;
             }
 
             return labels_one_hot;
@@ -176,7 +174,7 @@ namespace Tensorflow
         {
             var buffer = new byte[sizeof(uint)];
             var count = bytestream.Read(buffer, 0, 4);
-            return np.frombuffer(buffer, ">u4").Data<int>()[0];
+            return np.frombuffer(buffer, ">u4").ToArray<int>()[0];
         }
     }
 }

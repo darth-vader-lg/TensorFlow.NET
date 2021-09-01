@@ -14,8 +14,7 @@
    limitations under the License.
 ******************************************************************************/
 
-using NumSharp;
-using NumSharp.Utilities;
+using Tensorflow.NumPy;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -90,12 +89,12 @@ namespace Tensorflow
             switch (obj)
             {
                 case NDArray nd:
-                    return nd.ToString(false);
-                case Array arr:
+                    return nd.ToString();
+                /*case Array arr:
                     if (arr.Rank != 1 || arr.GetType().GetElementType()?.IsArray == true)
                         arr = Arrays.Flatten(arr);
                     var objs = toObjectArray(arr);
-                    return $"[{string.Join(", ", objs.Select(_tostring))}]";
+                    return $"[{string.Join(", ", objs.Select(_tostring))}]";*/
                 default:
                     return obj?.ToString() ?? "null";
             }
@@ -156,7 +155,7 @@ namespace Tensorflow
             switch (a)
             {
                 case Tensor tensor:
-                    return tensor.shape[0];
+                    return (int)tensor.shape[0];
                 case Tensors arr:
                     return arr.Length;
                 case Array arr:
@@ -165,15 +164,16 @@ namespace Tensorflow
                     return arr.Count;
                 case ICollection arr:
                     return arr.Count;
-                case NDArray ndArray:
-                    return ndArray.ndim == 0 ? 1 : ndArray.shape[0];
                 case IEnumerable enumerable:
                     return enumerable.OfType<object>().Count();
-                case TensorShape arr:
+                case Shape arr:
                     return arr.ndim;
             }
             throw new NotImplementedException("len() not implemented for type: " + a.GetType());
         }
+
+        public static int min(int a, int b)
+            => Math.Min(a, b);
 
         public static float min(float a, float b)
             => Math.Min(a, b);
@@ -269,13 +269,18 @@ namespace Tensorflow
             }
         }
 
-        public static IEnumerable<(T, T)> zip<T>(NDArray t1, NDArray t2)
+        public static IEnumerable<(T, T)> zip<T>(NDArray t1, NDArray t2, Axis axis = null)
             where T : unmanaged
         {
-            var a = t1.AsIterator<T>();
-            var b = t2.AsIterator<T>();
-            while (a.HasNext() && b.HasNext())
-                yield return (a.MoveNext(), b.MoveNext());
+            if (axis == null)
+            {
+                var a = t1.ToArray<T>();
+                var b = t2.ToArray<T>();
+                for (int i = 0; i < a.Length; i++)
+                    yield return (a[i], b[i]);
+            }
+            else
+                throw new NotImplementedException("");
         }
 
         public static IEnumerable<(T1, T2)> zip<T1, T2>(IList<T1> t1, IList<T2> t2)
@@ -294,10 +299,11 @@ namespace Tensorflow
             where T1 : unmanaged
             where T2 : unmanaged
         {
-            var a = t1.AsIterator<T1>();
-            var b = t2.AsIterator<T2>();
-            while (a.HasNext() && b.HasNext())
-                yield return (a.MoveNext(), b.MoveNext());
+            //var a = t1.AsIterator<T1>();
+            //var b = t2.AsIterator<T2>();
+            //while (a.HasNext() && b.HasNext())
+            //yield return (a.MoveNext(), b.MoveNext());
+            throw new NotImplementedException("");
         }
 
         public static IEnumerable<(T1, T2)> zip<T1, T2>(IEnumerable<T1> e1, IEnumerable<T2> e2)
@@ -500,6 +506,56 @@ namespace Tensorflow
                 return dic[key];
 
             return defaultValue;
+        }
+
+        public static Shape GetShape(this object data)
+        {
+            if (data is NDArray nd)
+                return nd.shape;
+
+            else if (data is Tensor tensor)
+                return tensor.shape;
+
+            else if (data is Axis axis)
+                return axis.IsScalar ? Shape.Scalar : new Shape(axis.axis.Length);
+
+            else if (!data.GetType().IsArray)
+                return Shape.Scalar;
+
+            switch (data)
+            {
+                case Array array:
+                    var dims = range(array.Rank).Select(x => (long)array.GetLength(x)).ToArray();
+                    return new Shape(dims);
+                default:
+                    throw new NotImplementedException("");
+            }
+        }
+
+        public static TF_DataType GetDataType(this object data)
+        {
+            var type = data.GetType();
+            switch (data)
+            {
+                case Shape:
+                    return TF_DataType.TF_INT64;
+                case Axis:
+                    return TF_DataType.TF_INT32;
+                case NDArray nd:
+                    return nd.dtype;
+                case Tensor tensor:
+                    return tensor.dtype;
+                case Tensors tensors:
+                    return tensors.dtype;
+                case IEnumerable<Tensor> tensors:
+                    return tensors.First().dtype;
+                case RefVariable variable:
+                    return variable.dtype;
+                case ResourceVariable variable:
+                    return variable.dtype;
+                default:
+                    return type.as_tf_dtype();
+            }
         }
     }
 }

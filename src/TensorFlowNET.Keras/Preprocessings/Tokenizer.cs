@@ -1,4 +1,4 @@
-﻿using NumSharp;
+﻿using Tensorflow.NumPy;
 using Serilog.Debugging;
 using System;
 using System.Collections.Generic;
@@ -373,7 +373,7 @@ namespace Tensorflow.Keras.Text
                 throw new InvalidOperationException("Fit the Tokenizer on some text data before using the 'tfidf' mode.");
             }
 
-            var x = np.zeros(sequences.Count(), word_count);
+            var x = np.zeros((sequences.Count(), word_count));
 
             for (int i = 0; i < sequences.Count(); i++)
             {
@@ -399,7 +399,7 @@ namespace Tensorflow.Keras.Text
                     foreach (var kv in counts)
                     {
                         var j = kv.Key;
-                        var c = kv.Value;
+                        var c = kv.Value + 0.0;
                         x[i, j] = c;
                     }
                 }
@@ -408,7 +408,7 @@ namespace Tensorflow.Keras.Text
                     foreach (var kv in counts)
                     {
                         var j = kv.Key;
-                        var c = kv.Value;
+                        var c = kv.Value + 0.0;
                         x[i, j] = ((double)c) / seq_length;
                     }
                 }
@@ -417,8 +417,8 @@ namespace Tensorflow.Keras.Text
                     foreach (var kv in counts)
                     {
                         var j = kv.Key;
-                        var c = kv.Value;
-                        x[i, j] = 1;
+                        // var c = kv.Value + 0.0;
+                        x[i, j] = 1.0;
                     }
                 }
                 else if (mode == "tfidf")
@@ -426,12 +426,12 @@ namespace Tensorflow.Keras.Text
                     foreach (var kv in counts)
                     {
                         var j = kv.Key;
-                        var c = kv.Value;
+                        var c = kv.Value + 0.0;
                         var id = 0;
                         var _ = index_docs.TryGetValue(j, out id);
-                        var tf = 1 + np.log(c);
-                        var idf = np.log(1 + document_count / (1 + id));
-                        x[i, j] = tf * idf;
+                        var tf = 1.0 + (double)np.log(c);
+                        var idf = np.log(1.0 + document_count / (1 + id));
+                        x[i, j] = tf * (double)idf;
                     }
                 }
             }

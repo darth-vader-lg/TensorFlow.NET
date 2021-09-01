@@ -1,4 +1,4 @@
-﻿using NumSharp;
+﻿using Tensorflow.NumPy;
 using System;
 using System.Linq;
 using System.Text;
@@ -10,7 +10,7 @@ namespace Tensorflow.Framework
     {
         public static void assert_is_compatible_with(this Tensor self, Tensor other)
         {
-            if (!self.is_compatible_with(other))
+            /*if (!self.is_compatible_with(other))
             {
                 var selfDim = self.shape
                     .Aggregate(new StringBuilder("{"), (sb, i) => sb.Append(i).Append(", "), sb => sb.ToString())
@@ -21,21 +21,21 @@ namespace Tensorflow.Framework
                     .Replace(", }", "}");
 
                 throw new ArgumentException($"Dimensions {selfDim} and {otherDim} are not compatible");
-            }
+            }*/
         }
 
         public static bool is_compatible_with(this Tensor self, Tensor other)
         {
             bool _shape_is_compatible_0dim(Shape _this, Shape _other)
             {
-                var __other = tensor_shape.as_shape(_other);
-                if (_this.Dimensions == null || __other.dims == null)
+                var __other = _other;
+                if (_this.dims == null || __other.dims == null)
                     return true;
 
-                if (_this.NDim != __other.ndim)
+                if (_this.ndim != __other.ndim)
                     return false;
 
-                foreach (var (x_dim, y_dim) in _this.Dimensions.Zip(__other.dims, (x_dim, y_dim) => (x_dim, y_dim)))
+                foreach (var (x_dim, y_dim) in _this.dims.Zip(__other.dims, (x_dim, y_dim) => (x_dim, y_dim)))
                 {
                     if (x_dim != y_dim)
                         return false;
@@ -54,29 +54,26 @@ namespace Tensorflow.Framework
                    !self.IsSparseTensor;
         }
 
-        public static Dimension dimension_at_index(TensorShape shape, int index)
+        public static Dimension dimension_at_index(Shape shape, int index)
         {
-            return shape.rank < 0 ?
+            return shape.ndim < 0 ?
                 new Dimension(-1) :
                 new Dimension(shape.dims[index]);
         }
 
         public static int dimension_value(Dimension dimension)
-            => dimension.value;
+            => (int)dimension.value;
 
-        public static TensorShape as_shape(this Shape shape)
-             => new TensorShape(shape.Dimensions);
-
-        public static TensorShape most_specific_compatible_shape(this TensorShape self, TensorShape other)
+        public static Shape most_specific_compatible_shape(this Shape self, Shape other)
         {
-            var dims = range(self.rank).Select(x => -1).ToArray();
+            var dims = range(self.ndim).Select(x => -1L).ToArray();
             foreach(var (i, (d1, d2)) in enumerate(zip(self.dims, other.dims)))
             {
                 if (d1 == d2)
                     dims[i] = d1;
             }
 
-            return new TensorShape(dims);
+            return new Shape(dims);
         }
     }
 }

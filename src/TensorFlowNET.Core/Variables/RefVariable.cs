@@ -15,7 +15,7 @@
 ******************************************************************************/
 
 using Google.Protobuf;
-using NumSharp;
+using Tensorflow.NumPy;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -50,7 +50,7 @@ namespace Tensorflow
         public Operation Op => _variable.op;
 
         public TF_DataType dtype => _variable.dtype;
-        public TensorShape shape => tensor_util.to_shape(_variable.shape);
+        public Shape shape => _variable.shape;
         public string Device => "";
 
         public string Name => _variable.name;
@@ -192,8 +192,8 @@ namespace Tensorflow
                     // Manually overrides the variable's shape with the initial value's.
                     if (validate_shape)
                     {
-                        var initial_value_shape = _initial_value.TensorShape;
-                        if (!initial_value_shape.is_fully_defined())
+                        var initial_value_shape = _initial_value.shape;
+                        if (!initial_value_shape.IsFullyDefined)
                             throw new ValueError($"initial_value must have a shape specified: {_initial_value}");
                     }
 

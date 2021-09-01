@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <VersionPrefix>$(TensorFlowNETRecommendersVersion)</VersionPrefix>
     <Description>TensorFlow Recommenders is a library for building recommender system models using TensorFlow.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>

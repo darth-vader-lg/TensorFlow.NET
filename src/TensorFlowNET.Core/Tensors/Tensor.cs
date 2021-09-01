@@ -14,7 +14,7 @@
    limitations under the License.
 ******************************************************************************/
 
-using NumSharp;
+using Tensorflow.NumPy;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -70,44 +70,54 @@ namespace Tensorflow
         /// <summary>
         ///     The DType of elements in this tensor.
         /// </summary>
-        public TF_DataType dtype => _handle == IntPtr.Zero ? _override_dtype : c_api.TF_TensorType(_handle);
-        public ulong bytesize => _handle == IntPtr.Zero ? 0 : c_api.TF_TensorByteSize(_handle);
-        public ulong itemsize => _handle == IntPtr.Zero ? 0 : c_api.TF_DataTypeSize(dtype);
-        public ulong size => _handle == IntPtr.Zero ? 0 : bytesize / itemsize;
-        public IntPtr buffer => _handle == IntPtr.Zero ? IntPtr.Zero : c_api.TF_TensorData(_handle);
-        public int num_consumers(TF_Output oper_out) => _handle == IntPtr.Zero ? 0 : c_api.TF_OperationOutputNumConsumers(oper_out);
-        public int NDims => rank;
+        public TF_DataType dtype => _handle == null ? _override_dtype : c_api.TF_TensorType(_handle);
+        public ulong bytesize => _handle == null ? 0 : c_api.TF_TensorByteSize(_handle);
+        public ulong dtypesize => _handle == null ? 0 : c_api.TF_DataTypeSize(dtype);
+        public ulong size => _handle == null ? 0 : bytesize / dtypesize;
+        public IntPtr buffer => _handle == null ? IntPtr.Zero : c_api.TF_TensorData(_handle);
+        public int num_consumers(TF_Output oper_out) => _handle == null ? 0 : c_api.TF_OperationOutputNumConsumers(oper_out);
+        public int ndim => rank;
 
         /// <summary>
         ///     The name of the device on which this tensor will be produced, or null.
         /// </summary>
         public virtual string Device => op.Device;
-        public int[] dims => shape;
+        public long[] dims => shape.dims;
 
         /// <summary>
         ///     Used for keep other pointer when do implicit operating
         /// </summary>
         public object Tag { get; set; }
+        protected new SafeTensorHandle _handle;
+        public SafeTensorHandle Handle => _handle;
 
+        protected SafeTensorHandleHandle _eagerTensorHandle;
         /// <summary>
         /// TFE_TensorHandle
         /// </summary>
-        public SafeTensorHandleHandle EagerTensorHandle { get; set; }
+        public SafeTensorHandleHandle EagerTensorHandle => _eagerTensorHandle;
 
-        public bool IsEagerTensor => this is EagerTensor;
+        protected bool isCreatedInGraphMode;
+        
+        public bool IsCreatedInGraphMode => isCreatedInGraphMode;
         public bool IsSparseTensor => this is SparseTensor;
+
+        public Tensor TensorShape => tf.shape(this);
 
         /// <summary>
         ///     Returns the shape of a tensor.
         /// </summary>
         /// <remarks>https://www.tensorflow.org/api_docs/python/tf/shape</remarks>
-        public int[] shape
+        public Shape shape
         {
             get
             {
-                var dims = new long[rank < 0 ? 0 : rank];
+                if (rank < 0)
+                    return Shape.Null;
 
-                if (_handle == IntPtr.Zero)
+                var dims = new Shape(new long[rank]);
+
+                if (_handle == null)
                 {
                     c_api.TF_GraphGetTensorShape(op.graph, _as_tf_output(), dims, rank, tf.Status.Handle);
                 }
@@ -117,15 +127,22 @@ namespace Tensorflow
                         dims[i] = c_api.TF_Dim(_handle, i);
                 }
 
-                return dims.Select(x => ((IConvertible)x).ToInt32(CultureInfo.InvariantCulture)).ToArray();
+                return dims;
             }
 
             set
             {
+                if (this is EagerTensor)
+                {
+                    if(!shape.is_compatible_with(value))
+                        throw new ValueError($"Tensor's shape is not compatible.");
+                    return;
+                }
+
                 if (value == null)
                     c_api.TF_GraphSetTensorShape(graph, _as_tf_output(), null, -1, tf.Status.Handle);
                 else
-                    c_api.TF_GraphSetTensorShape(graph, _as_tf_output(), value.Select(Convert.ToInt64).ToArray(), value.Length, tf.Status.Handle);
+                    c_api.TF_GraphSetTensorShape(graph, _as_tf_output(), value.dims, value.ndim, tf.Status.Handle);
 
                 tf.Status.Check(true);
             }
@@ -133,24 +150,14 @@ namespace Tensorflow
 
         public int[] _shape_tuple()
         {
-            return rank < 0 ? null : shape;
+            return rank < 0 ? null : shape.dims.Select(x => (int)x).ToArray();
         }
-
-        public TensorShape TensorShape => rank < 0 ? new TensorShape() : tensor_util.to_shape(shape);
 
         /// <summary>
         /// Keras History: (Layer, (node_index, tensor_index))
         /// </summary>
         public KerasHistory KerasHistory { get; set; }
         public Tensor KerasMask { get; set; }
-
-        /// <summary>
-        ///     Updates the shape of this tensor.
-        /// </summary>
-        public virtual void set_shape(TensorShape shape)
-        {
-            this.shape = shape.rank >= 0 ? shape.dims : null;
-        }
 
         /// <summary>
         ///     Updates the shape of this tensor.
@@ -175,7 +182,7 @@ namespace Tensorflow
         {
             get
             {
-                if (_handle == IntPtr.Zero)
+                if (_handle == null)
                 {
                     var output = _as_tf_output();
                     int ndim = c_api.TF_GraphGetTensorNumDims(op.graph, output, tf.Status.Handle);
@@ -204,7 +211,7 @@ namespace Tensorflow
 
             return _tf_output.Value;
         }
-
+        
         public Tensor MaybeMove()
         {
             var tensor = c_api.TF_TensorMaybeMove(_handle);
@@ -238,69 +245,17 @@ namespace Tensorflow
             switch (rank)
             {
                 case -1:
-                    return $"tf.Tensor '{name}' shape={TensorShape} dtype={dtype.as_numpy_name()}";
+                    return $"tf.Tensor '{name}' shape={shape} dtype={dtype.as_numpy_name()}";
                 case 0:
-                    return $"tf.Tensor '{name}' shape={TensorShape} dtype={dtype.as_numpy_name()}";
+                    return $"tf.Tensor '{name}' shape={shape} dtype={dtype.as_numpy_name()}";
                 default:
-                    return $"tf.Tensor '{name}' shape={TensorShape} dtype={dtype.as_numpy_name()}";
+                    return $"tf.Tensor '{name}' shape={shape} dtype={dtype.as_numpy_name()}";
             }
         }
 
-        /// <summary>
-        ///     Dispose any managed resources.
-        /// </summary>
-        /// <remarks>Equivalent to what you would perform inside <see cref="DisposableObject.Dispose"/></remarks>
-        protected override void DisposeManagedResources()
-        {
-
-        }
-
-        [SuppressMessage("ReSharper", "ConvertIfStatementToSwitchStatement")]
         protected override void DisposeUnmanagedResources(IntPtr handle)
         {
-#if TRACK_TENSOR_LIFE
-            print($"Delete Tensor 0x{handle.ToString("x16")} {AllocationType} Data: 0x{TensorDataPointer.ToString("x16")}");
-#endif
-            if (AllocationHandle != null)
-            {
-                if (AllocationType == AllocationType.GCHandle)
-                {
-                    ((GCHandle)AllocationHandle).Free();
-                    AllocationHandle = null;
-                    AllocationType = AllocationType.None;
-                }
-                else if (AllocationType == AllocationType.Marshal)
-                {
-                    Marshal.FreeHGlobal((IntPtr)AllocationHandle);
-                    AllocationHandle = null;
-                    AllocationType = AllocationType.None;
-                }
-                else if (AllocationType == AllocationType.FromPointer)
-                {
-                    AllocationHandle = null;
-                    AllocationType = AllocationType.None;
-                }
-                else
-                    throw new InvalidOperationException($"Tensor.AllocationHandle is not null ({AllocationHandle}) but AllocationType is not matched to a C# allocation type ({AllocationType}).");
-            }
 
-            if (dtype == TF_DataType.TF_STRING)
-            {
-                int size = 1;
-                foreach (var s in TensorShape.dims)
-                    size *= s;
-                var tstr = TensorDataPointer;
-#if TRACK_TENSOR_LIFE
-                print($"Delete TString 0x{handle.ToString("x16")} {AllocationType} Data: 0x{tstrings.ToString("x16")}");
-#endif
-                for (int i = 0; i < size; i++)
-                {
-                    c_api.TF_StringDealloc(tstr);
-                    tstr += TF_TSRING_SIZE;
-                }
-            }
-
-            c_api.TF_DeleteTensor(handle);
         }
 
         public bool IsDisposed => _disposed;

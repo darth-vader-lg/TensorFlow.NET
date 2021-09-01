@@ -1,4 +1,4 @@
-﻿using NumSharp;
+﻿using Tensorflow.NumPy;
 using System;
 using Tensorflow.Eager;
 using Tensorflow.Variables;
@@ -37,8 +37,8 @@ namespace Tensorflow
         public Tensor Handle => handle;
         protected Tensor _graph_element;
         public Tensor GraphElement => _graph_element;
-        protected TensorShape _shape;
-        public TensorShape shape => _shape;
+        protected Shape _shape;
+        public Shape shape => _shape;
 
         protected Operation initializer_op;
         public Operation Initializer => initializer_op;
@@ -68,14 +68,14 @@ namespace Tensorflow
             // when this object is garbage collected the deleter will be too. This
             // means ResourceVariables can be part of reference cycles without those
             // cycles being uncollectable.
-            if (handle.IsEagerTensor)
+            if (!handle.IsCreatedInGraphMode)
             {
                 _handle = handle.EagerTensorHandle.DangerousGetHandle();
                 eager_resource_deleter = new EagerResourceDeleter(handle, handle.Device);
             }
             else
             {
-                _handle = handle;
+                _handle = handle.Handle == null ? IntPtr.Zero : handle.Handle.DangerousGetHandle();
             }
 
 #if TRACK_TENSOR_LIFE
@@ -141,11 +141,11 @@ namespace Tensorflow
             // _maybe_set_handle_data(_dtype, _handle, result);
 
             // have to set shape when converting to substituent placeholder
-            if (result.TensorShape.ndim == -1)
+            if (result.shape.ndim == -1)
             {
                 c_api.TF_GraphSetTensorShape(result.graph,
                     result._as_tf_output(),
-                    shape.as_list_long(),
+                    shape.dims,
                     shape.ndim,
                     tf.Status.Handle);
                 tf.Status.Check(true);
@@ -222,7 +222,7 @@ namespace Tensorflow
         public override string ToString()
         {
             if (tf.Context.executing_eagerly())
-                return $"tf.Variable: '{Name}' shape={string.Join(",", shape)}, dtype={dtype.as_numpy_name()}, numpy={tensor_util.to_numpy_string(read_value())}";
+                return $"tf.Variable: '{Name}' shape={string.Join(",", shape)}, dtype={dtype.as_numpy_name()}, numpy={read_value().numpy()}";
             else
                 return $"tf.Variable: '{Name}' shape={string.Join(",", shape)}, dtype={dtype.as_numpy_name()}";
         }

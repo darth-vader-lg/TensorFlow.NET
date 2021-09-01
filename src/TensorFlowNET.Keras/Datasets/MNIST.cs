@@ -14,7 +14,7 @@
    limitations under the License.
 ******************************************************************************/
 
-using NumSharp;
+using Tensorflow.NumPy;
 using System;
 using System.IO;
 using Tensorflow.Keras.Utils;

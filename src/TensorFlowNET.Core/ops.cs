@@ -16,11 +16,10 @@
 
 using Google.Protobuf;
 using Google.Protobuf.Collections;
-using NumSharp;
+using Tensorflow.NumPy;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Tensorflow.Contexts;
 using Tensorflow.Eager;
@@ -124,10 +123,17 @@ namespace Tensorflow
             if (dtype == TF_DataType.DtInvalid)
                 dtype = preferred_dtype;
 
+            if (dtype == TF_DataType.DtInvalid)
+                dtype = value.GetDataType();
+
             if (value is EagerTensor eager_tensor)
             {
                 if (tf.executing_eagerly())
+                {
+                    if (dtype != TF_DataType.DtInvalid && dtype != eager_tensor.dtype)
+                        return gen_math_ops.cast(eager_tensor, dtype.as_base_dtype(), name: name);
                     return eager_tensor;
+                }
                 else
                 {
                     var graph = get_default_graph();
@@ -137,6 +143,7 @@ namespace Tensorflow
                 }
             }
 
+            // graph mode
             Tensor ret = value switch
             {
                 NDArray nd => constant_op.constant(nd, dtype: dtype, name: name),
@@ -144,16 +151,22 @@ namespace Tensorflow
                             ? tensor.AsPlaceholder(name: name)
                             : tensor.AsConstant(name: name),
                 Tensor tensor => tensor,
-                Tensor[] tensors => array_ops._autopacking_helper(tensors, dtype, name == null ? "packed" : name),
+                IEnumerable<Tensor> tensors => array_ops._autopacking_helper(tensors, dtype, name == null ? "packed" : name),
                 RefVariable varVal => varVal._TensorConversionFunction(dtype: dtype, name: name, as_ref: as_ref),
                 ResourceVariable varVal => varVal._TensorConversionFunction(dtype: dtype, name: name, as_ref: as_ref),
-                TensorShape ts => constant_op.constant(ts.dims, dtype: dtype, name: name),
-                int[] dims => constant_op.constant(dims, dtype: dtype, name: name),
+                Axis ts => constant_op.constant(ts, dtype: dtype, name: name),
+                Shape ts => constant_op.constant(ts.dims, dtype: dtype, name: name),
                 string str => constant_op.constant(str, dtype: tf.@string, name: name),
                 string[] str => constant_op.constant(str, dtype: tf.@string, name: name),
                 IEnumerable<object> objects => array_ops._autopacking_conversion_function(objects, dtype: dtype, name: name),
                 _ => constant_op.constant(value, dtype: dtype, name: name)
             };
+
+            if (dtype == TF_DataType.TF_STRING)
+                return ret;
+
+            if (dtype.as_base_dtype() != ret.dtype.as_base_dtype())
+                ret = gen_math_ops.cast(ret, dtype, name: name);
 
             return ret;
         }

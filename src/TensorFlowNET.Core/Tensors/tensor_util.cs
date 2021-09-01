@@ -14,7 +14,7 @@
    limitations under the License.
 ******************************************************************************/
 
-using NumSharp;
+using Tensorflow.NumPy;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,13 +27,6 @@ namespace Tensorflow
 {
     public static class tensor_util
     {
-        public static TF_DataType[] _TENSOR_CONTENT_TYPES =
-        {
-            TF_DataType.TF_FLOAT, TF_DataType.TF_DOUBLE, TF_DataType.TF_INT32, TF_DataType.TF_UINT8, TF_DataType.TF_INT16,
-            TF_DataType.TF_INT8, TF_DataType.TF_INT64, TF_DataType.TF_QINT8, TF_DataType.TF_QUINT8, TF_DataType.TF_QINT16,
-            TF_DataType.TF_QUINT16, TF_DataType.TF_QINT32, TF_DataType.TF_UINT32, TF_DataType.TF_UINT64
-        };
-
         /// <summary>
         /// Returns the constant value of the given tensor, if efficiently calculable.
         /// </summary>
@@ -42,7 +35,9 @@ namespace Tensorflow
         /// <returns></returns>
         public static NDArray constant_value(Tensor tensor, bool partial = false)
         {
-            if (tensor is EagerTensor)
+            if (tensor is NDArray nd)
+                return nd;
+            else if (tensor is EagerTensor)
                 return tensor.numpy();
 
             NDArray ret = _ConstantValue(tensor, partial);
@@ -65,29 +60,29 @@ namespace Tensorflow
 
         public static NDArray MakeNdarray(TensorProto tensor)
         {
-            var shape = tensor.TensorShape.Dim.Select(x => (int)x.Size).ToArray();
-            int num_elements = np.prod(shape);
-            var tensor_dtype = tensor.Dtype.as_numpy_dtype();
+            var shape = new Shape(tensor.TensorShape.Dim.Select(x => x.Size).ToArray());
+            var num_elements = shape.size;
+            var tensor_dtype = tensor.Dtype.as_tf_dtype();
 
-            if (shape.Length > 0 && tensor.TensorContent.Length > 0)
+            if (shape.ndim > 0 && tensor.TensorContent.Length > 0)
             {
-                return np.frombuffer(tensor.TensorContent.ToByteArray(), tensor_dtype).reshape(shape);
+                return np.frombuffer(tensor.TensorContent.ToByteArray(), shape, tensor_dtype);
             }
             else if (tensor.Dtype == DataType.DtHalf || tensor.Dtype == DataType.DtBfloat16)
             {
-                return np.array(tensor.HalfVal).reshape(shape);
+                return np.array(tensor.HalfVal.ToArray()).reshape(shape);
             }
             else if (tensor.Dtype == DataType.DtFloat)
             {
-                return np.array(tensor.FloatVal).reshape(shape);
+                return np.array(tensor.FloatVal.ToArray()).reshape(shape);
             }
             else if (new DataType[] { DataType.DtInt32, DataType.DtUint8 }.Contains(tensor.Dtype))
             {
-                return np.array(tensor.IntVal).reshape(shape);
+                return np.array(tensor.IntVal.ToArray()).reshape(shape);
             }
             else if (tensor.Dtype == DataType.DtBool)
             {
-                return np.array(tensor.BoolVal).reshape(shape);
+                return np.array(tensor.BoolVal.ToArray()).reshape(shape);
             }
 
             throw new NotImplementedException("MakeNdarray");
@@ -100,7 +95,7 @@ namespace Tensorflow
         };
 
         /// <summary>
-        /// Create a TensorProto.
+        /// Create a TensorProto, invoked in graph mode
         /// </summary>
         /// <param name="values"></param>
         /// <param name="dtype"></param>
@@ -108,141 +103,124 @@ namespace Tensorflow
         /// <param name="verify_shape"></param>
         /// <param name="allow_broadcast"></param>
         /// <returns></returns>
-        public static TensorProto make_tensor_proto(object values, TF_DataType dtype = TF_DataType.DtInvalid, int[] shape = null, bool verify_shape = false, bool allow_broadcast = false)
+        public static TensorProto make_tensor_proto(object values, TF_DataType dtype = TF_DataType.DtInvalid, Shape? shape = null, bool verify_shape = false, bool allow_broadcast = false)
         {
             if (allow_broadcast && verify_shape)
                 throw new ValueError("allow_broadcast and verify_shape are not both allowed.");
             if (values is TensorProto tp)
                 return tp;
 
-            // We first convert value to a numpy array or scalar.
-            NDArray nparray = null;
-            var np_dt = dtype.as_numpy_dtype();
+            var origin_dtype = values.GetDataType();
+            if (dtype == TF_DataType.DtInvalid)
+                dtype = origin_dtype;
+            else if(origin_dtype != dtype)
+            {
+                var new_system_dtype = dtype.as_system_dtype();
+                if (values is long[] long_values)
+                {
+                    if (dtype == TF_DataType.TF_INT32)
+                        values = long_values.Select(x => (int)Convert.ChangeType(x, new_system_dtype)).ToArray();
+                }
+                else
+                    values = Convert.ChangeType(values, new_system_dtype);
+
+                dtype = values.GetDataType();
+            }
+
+            shape = shape ?? values.GetShape();
+            var tensor_proto = new TensorProto
+            {
+                Dtype = dtype.as_datatype_enum(),
+                TensorShape = shape.as_shape_proto()
+            };
 
             if (values is NDArray nd)
             {
-                nparray = nd;
-            }
-            else if(values is string str)
-            {
-                // scalar string
-                nparray = convert_to_numpy_ndarray(values);
-                shape = new int[0];
-            }
-            else if(values is string[] strings)
-            {
-                nparray = convert_to_numpy_ndarray(values);
-                shape = new[] { strings.Length };
-            }
-            else
-            {
-                if (values == null)
-                    throw new ValueError("None values not supported.");
-
-                nparray = convert_to_numpy_ndarray(values);
-
-                if (np_dt != null && np_dt != typeof(string))
-                    nparray = nparray.astype(np_dt);
-            }
-
-            var numpy_dtype = nparray.dtype.as_dtype(dtype: dtype);
-            if (numpy_dtype == TF_DataType.DtInvalid)
-                throw new TypeError($"Unrecognized data type: {nparray.dtype}");
-
-            // If dtype was specified and is a quantized type, we convert
-            // numpy_dtype back into the quantized version.
-            if (quantized_types.Contains(dtype))
-                numpy_dtype = dtype;
-
-            bool is_same_size = false;
-            int shape_size = 0;
-
-            // If shape is not given, get the shape from the numpy array.
-            if (shape == null)
-            {
-                if (numpy_dtype == TF_DataType.TF_STRING)
+                // scalar
+                if (nd.shape.IsScalar)
                 {
-                    if (nparray.ndim == 0)
+                    switch (nd.dtype)
                     {
-                        // scalar string
-                        shape = new int[0];
-                        shape_size = 0;
+                        case TF_DataType.TF_BOOL:
+                            tensor_proto.BoolVal.AddRange(nd.ToArray<bool>());
+                            break;
+                        case TF_DataType.TF_UINT8:
+                            tensor_proto.IntVal.AddRange(nd.ToArray<byte>().Select(x => (int)x).ToArray());
+                            break;
+                        case TF_DataType.TF_INT32:
+                            tensor_proto.IntVal.AddRange(nd.ToArray<int>());
+                            break;
+                        case TF_DataType.TF_INT64:
+                            tensor_proto.Int64Val.AddRange(nd.ToArray<long>());
+                            break;
+                        case TF_DataType.TF_FLOAT:
+                            tensor_proto.FloatVal.AddRange(nd.ToArray<float>());
+                            break;
+                        case TF_DataType.TF_DOUBLE:
+                            tensor_proto.DoubleVal.AddRange(nd.ToArray<double>());
+                            break;
+                        default:
+                            throw new Exception("make_tensor_proto Not Implemented");
                     }
-                    else
-                        throw new NotImplementedException($"Not implemented for {nparray.ndim} dims string array.");
                 }
                 else
                 {
-                    shape = nparray.shape;
-                    is_same_size = true;
-                    shape_size = nparray.size;
+                    var len = nd.dtypesize * nd.size;
+                    byte[] bytes = nd.ToByteArray();
+                    tensor_proto.TensorContent = Google.Protobuf.ByteString.CopyFrom(bytes);
                 }
             }
-            else
-            {
-                shape_size = new TensorShape(shape).size;
-                is_same_size = shape_size == nparray.size;
-            }
-
-            var tensor_proto = new TensorProto
-            {
-                Dtype = numpy_dtype.as_datatype_enum(),
-                TensorShape = tensor_util.as_shape(shape)
-            };
-
-            if (is_same_size && _TENSOR_CONTENT_TYPES.Contains(numpy_dtype) && shape_size > 1)
-            {
-                byte[] bytes = nparray.ToByteArray();
-                tensor_proto.TensorContent = Google.Protobuf.ByteString.CopyFrom(bytes.ToArray());
-                return tensor_proto;
-            }
-
-            if (numpy_dtype == TF_DataType.TF_STRING && !(values is NDArray))
+            else if (dtype == TF_DataType.TF_STRING && !(values is NDArray))
             {
                 if (values is string str)
-                {
                     tensor_proto.StringVal.Add(Google.Protobuf.ByteString.CopyFromUtf8(str));
-                    tensor_proto.TensorShape = tensor_util.as_shape(new int[0]);
-                }
                 else if (values is string[] str_values)
                     tensor_proto.StringVal.AddRange(str_values.Select(x => Google.Protobuf.ByteString.CopyFromUtf8(x)));
                 else if (values is byte[] byte_values)
                     tensor_proto.TensorContent = Google.Protobuf.ByteString.CopyFrom(byte_values);
-
-                return tensor_proto;
             }
-
-            var proto_values = nparray.ravel();
-
-            switch (nparray.dtype.Name)
+            else if (values is Array array)
             {
-                case "Bool":
-                case "Boolean":
-                    tensor_proto.BoolVal.AddRange(proto_values.Data<bool>());
-                    break;
-                case "Int32":
-                    tensor_proto.IntVal.AddRange(proto_values.Data<int>());
-                    break;
-                case "Int64":
-                    tensor_proto.Int64Val.AddRange(proto_values.Data<long>());
-                    break;
-                case "Single":
-                    tensor_proto.FloatVal.AddRange(proto_values.Data<float>());
-                    break;
-                case "Double":
-                    tensor_proto.DoubleVal.AddRange(proto_values.Data<double>());
-                    break;
-                /*case "String":
-                    tensor_proto.StringVal.AddRange(proto_values.Data<string>().Select(x => Google.Protobuf.ByteString.CopyFromUtf8(x.ToString())));
-                    break;*/
-                default:
-                    throw new Exception("make_tensor_proto Not Implemented");
+                // array
+                var len = dtype.get_datatype_size() * (int)shape.size;
+                byte[] bytes = new byte[len];
+                System.Buffer.BlockCopy(array, 0, bytes, 0, len);
+                tensor_proto.TensorContent = Google.Protobuf.ByteString.CopyFrom(bytes);
+            }
+            else
+            {
+                switch (values)
+                {
+                    case Axis val:
+                        tensor_proto.IntVal.AddRange(val.axis);
+                        break;
+                    case bool val:
+                        tensor_proto.BoolVal.AddRange(new[] { val });
+                        break;
+                    case sbyte val:
+                        tensor_proto.IntVal.AddRange(new[] { (int)val });
+                        break;
+                    case int val:
+                        tensor_proto.IntVal.AddRange(new[] { val });
+                        break;
+                    case long val:
+                        tensor_proto.Int64Val.AddRange(new[] { val });
+                        break;
+                    case float val:
+                        tensor_proto.FloatVal.AddRange(new[] { val });
+                        break;
+                    case double val:
+                        tensor_proto.DoubleVal.AddRange(new[] { val });
+                        break;
+                    default:
+                        throw new Exception("make_tensor_proto Not Implemented");
+                }
             }
 
             return tensor_proto;
         }
 
-        public static TensorShape constant_value_as_shape(Tensor tensor)
+        public static Shape constant_value_as_shape(Tensor tensor)
         {
             bool hasattr(Graph property, string attr)
             {
@@ -257,52 +235,55 @@ namespace Tensorflow
 
             if (tensor.GetType() == typeof(EagerTensor))
             {
-                return new TensorShape(tensor.numpy().ToArray<int>());
+                if(tensor.dtype == TF_DataType.TF_INT64)
+                    return new Shape(tensor.ToArray<long>());
+                else
+                    return new Shape(tensor.ToArray<int>());
             }
 
-            if (tensor.TensorShape.ndim == 0)
+            if (tensor.shape.ndim == 0)
             {
                 var value_ = constant_value(tensor);
                 if (value_ == null)
                     throw new ValueError(
                         @"Received a scalar with unknown value as shape; require a statically
 known scalar with value '-1' to describe an unknown shape.");
-                if (value_ != -1)
+                if ((int)value_ != -1)
                     throw new ValueError(
                         String.Format(@"Received a scalar value {0} as shape; require a statically known
 scalar with value '-1' to describe an unknown shape.", value_));
-                return tensor.TensorShape.unknown_shape(-1);
+                return tensor.shape.unknown_shape(-1);
             }
 
-            var shape = tensor.TensorShape.with_rank(1);
-            if (shape == new TensorShape(new int[] { 1 }))
+            var shape = tensor.shape.with_rank(1);
+            if (shape == new Shape(new int[] { 1 }))
             {
-                return new TensorShape(new int[] { });
+                return new Shape(new int[] { });
             }
             else if (tensor.op.type == "Cast")
             {
                 var pre_cast = constant_value_as_shape(tensor.op.inputs[0]);
                 if (pre_cast.dims == null)
                     return pre_cast;
-                var cast_dtype = dtypes.as_dtype((Type)tensor.op.get_attr("DstT"));
+                var cast_dtype = dtypes.as_tf_dtype((Type)tensor.op.get_attr("DstT"));
                 if (!Array.Exists(new[] { dtypes.int32, dtypes.int64 }, cast_dtype_ => cast_dtype_ == cast_dtype))
-                    return tensor.TensorShape.unknown_shape(shape.dims[0]);
+                    return tensor.shape.unknown_shape((int)shape.dims[0]);
 
-                int[] x_ = { };
-                foreach (var x in pre_cast.as_list())
+                long[] x_ = { };
+                foreach (var x in pre_cast.dims)
                     if (x != -1)
                         x_[x_.Length] = x;
                     else
                         x_[x_.Length] = -1;
-                var dest_dtype_shape_array = np.array(x_).astype(cast_dtype.as_numpy_dtype());
+                var dest_dtype_shape_array = np.array(x_).astype(cast_dtype);
 
-                int[] y_ = { };
-                foreach (int y in dest_dtype_shape_array)
+                long[] y_ = { };
+                foreach (int y in dest_dtype_shape_array.ToArray<int>())
                     if (y >= 0)
                         y_[y_.Length] = y;
                     else
                         y_[y_.Length] = -1;
-                return new TensorShape(y_);
+                return new Shape(y_);
             }
             else if (tensor.op.type == "Shape")
             {
@@ -310,14 +291,14 @@ scalar with value '-1' to describe an unknown shape.", value_));
             }
             else if (tensor.op.type == "Pack")
             {
-                var ret_ = new TensorShape(new int[] { });
+                var ret_ = new Shape(new int[] { });
                 if ((int)tensor.op.get_attr("axis") != 0)
                     throw new ValueError(String.Format(
                         @"Since rank 1 inputs are expected, Pack's axis: {0} must be 0, otherwise it
 would not be rank 1.", tensor.op.get_attr("axis")));
                 foreach (Tensor pack_input in tensor.op.inputs)
                 {
-                    var pack_input_val = constant_value(pack_input);
+                    var pack_input_val = (int)constant_value(pack_input);
                     Dimension new_dim;
                     if (pack_input_val < 0)
                     {
@@ -331,13 +312,13 @@ would not be rank 1.", tensor.op.get_attr("axis")));
                     {
                         new_dim = new Dimension(pack_input_val);
                     }
-                    ret_ = ret_.concatenate(new int[] { new_dim });
+                    ret_ = ret_.concatenate(new long[] { new_dim });
                 }
                 return ret_;
             }
             else if (tensor.op.type == "Concat")
             {
-                var ret_ = new TensorShape(new int[] { });
+                var ret_ = new Shape(new int[] { });
 
                 var inputlist_ = new ArraySegment<Tensor>(tensor.op.inputs, 1,
                                                         tensor.op.inputs.Length - 1);
@@ -387,15 +368,15 @@ would not be rank 1.", tensor.op.get_attr("axis")));
                             // sorry for the mess here, but this hacky solution was the best way
                             // i could come up with to implement the things done in python in c#
                             var prev_ = constant_value_as_shape(tensor.op.inputs[0]).dims;
-                            var prev = prev_.Skip(begin).Take(end - begin).ToArray();
+                            var prev = prev_.Skip((int)begin).Take((int)end - (int)begin).ToArray();
                             // 100 being the comparison doesn't really matter here; it's going to break anyway
-                            for (int iter = 0; iter != 100; iter = iter + strides)
+                            for (int iter = 0; iter != 100; iter = iter + (int)strides)
                             {
                                 prev[prev.Length] = prev_[iter];
-                                if ((iter + strides) > prev_.Length)
+                                if ((iter + (int)strides) > prev_.Length)
                                     break;
                             }
-                            var ret_ = new TensorShape(prev);
+                            var ret_ = new Shape(prev);
                             return ret_;
                         }
                     }
@@ -422,7 +403,7 @@ would not be rank 1.", tensor.op.get_attr("axis")));
                 }
             }
 
-            var ret = tensor.TensorShape.unknown_shape(shape.dims[0]);
+            var ret = tensor.shape.unknown_shape((int)shape.dims[0]);
             var value = constant_value(tensor);
             if (!(value is null))
             {
@@ -430,79 +411,9 @@ would not be rank 1.", tensor.op.get_attr("axis")));
                 foreach (var (index, d) in enumerate(value.ToArray<int>()))
                     d_[index] = d >= 0 ? d : -1;
                 
-                ret = ret.merge_with(new TensorShape(d_));
+                ret = ret.merge_with(new Shape(d_));
             }
             return ret;
-        }
-
-        public static NDArray convert_to_numpy_ndarray(object values)
-        {
-            NDArray nd;
-
-            switch (values)
-            {
-                case NDArray val:
-                    nd = val;
-                    break;
-                case TensorShape val:
-                    nd = val.dims;
-                    break;
-                case bool boolVal:
-                    nd = boolVal;
-                    break;
-                case int intVal:
-                    nd = intVal;
-                    break;
-                case int[] intVals:
-                    nd = np.array(intVals);
-                    break;
-                case int[,] intVals:
-                    nd = np.array(intVals);
-                    break;
-                case long intVal:
-                    nd = intVal;
-                    break;
-                case long[] intVals:
-                    nd = np.array(intVals);
-                    break;
-                case long[,] intVals:
-                    nd = np.array(intVals);
-                    break;
-                case float floatVal:
-                    nd = floatVal;
-                    break;
-                case float[] floatVals:
-                    nd = floatVals;
-                    break;
-                case float[,] floatVals:
-                    nd = np.array(floatVals);
-                    break;
-                case double doubleVal:
-                    nd = doubleVal;
-                    break;
-                case double[] doubleVals:
-                    nd = np.array(doubleVals);
-                    break;
-                case double[,] doubleVals:
-                    nd = np.array(doubleVals);
-                    break;
-                case string strVal:
-                    nd = new NDArray(Encoding.ASCII.GetBytes(strVal));
-                    break;
-                case string[] strVals:
-                    nd = np.array(strVals);
-                    break;
-                case byte[] byteValues:
-                    nd = byteValues;
-                    break;
-                case byte[,] byteValues:
-                    nd = np.array(byteValues);
-                    break;
-                default:
-                    throw new NotImplementedException($"convert_to_numpy_ndarray: Support for type {values.GetType()} Not Implemented");
-            }
-
-            return nd;
         }
 
         public static TensorShapeProto as_shape<T>(T[] dims)
@@ -531,27 +442,38 @@ would not be rank 1.", tensor.op.get_attr("axis")));
             return shape;
         }
 
-        public static TensorShape to_shape(long[] dims)
+        public static Shape to_shape(long[] dims)
         {
-            return new TensorShape(dims.Select(x => (int)x).ToArray());
+            return new Shape(dims.Select(x => (int)x).ToArray());
         }
 
-        public static TensorShape to_shape(int[] dims)
+        public static Shape to_shape(int[] dims)
         {
-            return new TensorShape(dims);
+            return new Shape(dims);
         }
 
-        public static TensorShape as_shape(this Shape shape)
+        public static TensorShapeProto as_shape_proto(this Shape tshape)
         {
-            return new TensorShape(shape.Dimensions);
+            TensorShapeProto shape = new TensorShapeProto();
+
+            for (int i = 0; i < tshape.ndim; i++)
+            {
+                var dim = new TensorShapeProto.Types.Dim();
+                dim.Size = tshape.dims[i];
+                //dim.Name = $"dim_{i}";
+
+                shape.Dim.Add(dim);
+            }
+
+            return shape;
         }
 
-        public static TensorShape reshape(this Shape shape, int[] dims)
+        public static Shape reshape(this Shape shape, int[] dims)
         {
-            return new TensorShape(dims);
+            return new Shape(dims);
         }
 
-        public static TensorShapeProto as_proto(this TensorShape tshape)
+        public static TensorShapeProto as_proto(this Shape tshape)
         {
             TensorShapeProto shape = new TensorShapeProto();
 
@@ -570,36 +492,6 @@ would not be rank 1.", tensor.op.get_attr("axis")));
         public static Tensor shape_tensor(int[] shape)
         {
             return ops.convert_to_tensor(shape, dtype: TF_DataType.TF_INT32, name: "shape");
-        }
-
-        public static string to_numpy_string(Tensor tensor)
-        {
-            var dtype = tensor.dtype;
-
-            if (dtype == TF_DataType.TF_STRING)
-            {
-                if (tensor.rank == 0)
-                    return "'" + string.Join(string.Empty, tensor.StringBytes()[0]
-                        .Take(25)
-                        .Select(x => x < 32 || x > 127 ? "\\x" + x.ToString("x") : Convert.ToChar(x).ToString())) + "'";
-                else
-                    return $"['{string.Join("', '", tensor.StringData().Take(25))}']";
-            }
-            else if(dtype == TF_DataType.TF_VARIANT)
-            {
-                return "<unprintable>";
-            }
-            else if (dtype == TF_DataType.TF_RESOURCE)
-            {
-                return "<unprintable>";
-            }
-
-            var nd = tensor.numpy();
-
-            if (nd.size == 0)
-                return "[]";
-
-            return nd.ToString();
         }
 
         public static ParsedSliceArgs ParseSlices(Slice[] slices)

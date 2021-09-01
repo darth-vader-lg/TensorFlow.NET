@@ -25,11 +25,11 @@ namespace Tensorflow.Keras.Metrics
         /// <returns>Sparse categorical accuracy values.</returns>
         public Tensor sparse_categorical_accuracy(Tensor y_true, Tensor y_pred)
         {
-            var y_pred_rank = y_pred.TensorShape.ndim;
-            var y_true_rank = y_true.TensorShape.ndim;
+            var y_pred_rank = y_pred.shape.ndim;
+            var y_true_rank = y_true.shape.ndim;
             // If the shape of y_true is (num_samples, 1), squeeze to (num_samples,)
             if (y_true_rank != -1 && y_pred_rank != -1
-                && y_true.shape.Length == y_pred.shape.Length)
+                && y_true.shape.ndim == y_pred.shape.ndim)
                 y_true = array_ops.squeeze(y_true, axis: new[] { -1 });
             y_pred = math_ops.argmax(y_pred, -1);
 

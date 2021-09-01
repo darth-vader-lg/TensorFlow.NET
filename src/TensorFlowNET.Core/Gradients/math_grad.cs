@@ -14,7 +14,7 @@
    limitations under the License.
 ******************************************************************************/
 
-using NumSharp;
+using Tensorflow.NumPy;
 using System;
 using System.Linq;
 using Tensorflow.Eager;
@@ -195,7 +195,7 @@ namespace Tensorflow.Gradients
 
             if (op is EagerOperation op_eager &&
                 op_eager.SkipInputIndices.Contains(1) &&
-                y.NDims == 0)
+                y.ndim == 0)
             {
                 return new Tensor[]
                 {
@@ -506,7 +506,7 @@ namespace Tensorflow.Gradients
                 if (!(axes is null))
                 {
                     var rank = input_0_shape.Length;
-                    if (Enumerable.SequenceEqual(Enumerable.Range(0, rank), axes.Data<int>()))
+                    if (Enumerable.SequenceEqual(Enumerable.Range(0, rank), axes.ToArray<int>()))
                     {
                         if (tf.Context.executing_eagerly())
                         {
@@ -759,7 +759,7 @@ namespace Tensorflow.Gradients
 
             if (op is EagerOperation op_eager &&
                 op_eager.SkipInputIndices.Contains(1) &&
-                y.NDims == 0)
+                y.ndim == 0)
             {
                 x = math_ops.conj(x);
                 y = math_ops.conj(y);
@@ -810,8 +810,8 @@ namespace Tensorflow.Gradients
         private static (Tensor, Tensor, bool)[] SmartBroadcastGradientArgs(Tensor x, Tensor y, Tensor grad)
         {
             Tensor sx, sy;
-            if (x.TensorShape.is_fully_defined() &&
-                y.TensorShape.is_fully_defined())
+            if (x.shape.IsFullyDefined &&
+                y.shape.IsFullyDefined)
             {
                 sx = array_ops.shape(x);
                 sy = array_ops.shape(y);
@@ -825,8 +825,8 @@ namespace Tensorflow.Gradients
             var (rx, ry) = gen_array_ops.broadcast_gradient_args(sx, sy);
             return new[]
             {
-                (sx, rx, !x.TensorShape.Equals(grad.TensorShape)),
-                (sy, ry, !y.TensorShape.Equals(grad.TensorShape))
+                (sx, rx, !x.shape.Equals(grad.shape)),
+                (sy, ry, !y.shape.Equals(grad.shape))
             };
         }
     }

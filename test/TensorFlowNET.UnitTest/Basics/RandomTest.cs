@@ -1,5 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NumSharp;
+using Tensorflow.NumPy;
 using System;
 using System.Linq;
 using Tensorflow;
@@ -17,7 +17,7 @@ namespace TensorFlowNET.UnitTest.Basics
         [TestMethod]
         public void TFRandomSeedTest()
         {
-            var initValue = np.arange(6).reshape(3, 2);
+            var initValue = np.arange(6).reshape((3, 2));
             tf.set_random_seed(1234);
             var a1 = tf.random_uniform(1);
             var b1 = tf.random_shuffle(tf.constant(initValue));
@@ -30,8 +30,8 @@ namespace TensorFlowNET.UnitTest.Basics
             tf.set_random_seed(1234);
             var a2 = tf.random_uniform(1);
             var b2 = tf.random_shuffle(tf.constant(initValue));
-            Assert.IsTrue(a1.numpy().array_equal(a2.numpy()));
-            Assert.IsTrue(b1.numpy().array_equal(b2.numpy()));
+            Assert.AreEqual(a1.numpy(), a2.numpy());
+            Assert.AreEqual(b1.numpy(), b2.numpy());
         }
         
         /// <summary>
@@ -40,7 +40,7 @@ namespace TensorFlowNET.UnitTest.Basics
         [TestMethod, Ignore]
         public void TFRandomSeedTest2()
         {
-            var initValue = np.arange(6).reshape(3, 2);
+            var initValue = np.arange(6).reshape((3, 2));
             tf.set_random_seed(1234);
             var a1 = tf.random_uniform(1, seed:1234);
             var b1 = tf.random_shuffle(tf.constant(initValue), seed: 1234);
@@ -53,8 +53,8 @@ namespace TensorFlowNET.UnitTest.Basics
             tf.set_random_seed(1234);
             var a2 = tf.random_uniform(1);
             var b2 = tf.random_shuffle(tf.constant(initValue));
-            Assert.IsTrue(a1.numpy().array_equal(a2.numpy()));
-            Assert.IsTrue(b1.numpy().array_equal(b2.numpy()));
+            Assert.AreEqual(a1, a2);
+            Assert.AreEqual(b1, b2);
         }
 
         /// <summary>
@@ -76,8 +76,8 @@ namespace TensorFlowNET.UnitTest.Basics
             var a2 = tf.random.normal(1);
             var b2 = tf.random.truncated_normal(1);
 
-            Assert.IsTrue(a1.numpy().array_equal(a2.numpy()));
-            Assert.IsTrue(b1.numpy().array_equal(b2.numpy()));
+            Assert.AreEqual(a1.numpy(), a2.numpy());
+            Assert.AreEqual(b1.numpy(), b2.numpy());
         }
 
         /// <summary>
@@ -99,8 +99,8 @@ namespace TensorFlowNET.UnitTest.Basics
             var a2 = tf.random.normal(1, seed:1234);
             var b2 = tf.random.truncated_normal(1, seed:1234);
 
-            Assert.IsTrue(a1.numpy().array_equal(a2.numpy()));
-            Assert.IsTrue(b1.numpy().array_equal(b2.numpy()));
+            Assert.AreEqual(a1, a2);
+            Assert.AreEqual(b1, b2);
         }
     }
 }

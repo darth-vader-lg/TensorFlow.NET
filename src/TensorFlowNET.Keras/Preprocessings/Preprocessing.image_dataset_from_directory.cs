@@ -1,6 +1,6 @@
 ﻿using static Tensorflow.KerasApi;
 using static Tensorflow.Binding;
-using NumSharp; 
+using Tensorflow.NumPy; 
 
 namespace Tensorflow.Keras
 {
@@ -32,7 +32,7 @@ namespace Tensorflow.Keras
             string[] class_names = null,
             string color_mode = "rgb",
             int batch_size = 32,
-            TensorShape image_size = null,
+            Shape image_size = null,
             bool shuffle = true,
             int? seed = null,
             float validation_split = 0.2f,
@@ -115,12 +115,12 @@ namespace Tensorflow.Keras
             var start_positions = np.arange(0, num_seqs, sequence_stride);
             if (shuffle)
             {
-                var rng = np.random.RandomState(seed);
-                rng.shuffle(start_positions);
+                tf.set_random_seed(seed);
+                np.random.shuffle(start_positions);
             }
 
-            var sequence_length_tensor = math_ops.cast(sequence_length, dtype: index_dtype);
-            var sampling_rate_tensor = math_ops.cast(sampling_rate, dtype: index_dtype);
+            var sequence_length_tensor = constant_op.constant(sequence_length, dtype: index_dtype);
+            var sampling_rate_tensor = constant_op.constant(sampling_rate, dtype: index_dtype);
 
             var start_positions_tensor = tf.constant(start_positions);
             var positions_ds = tf.data.Dataset.from_tensors(start_positions_tensor).repeat();

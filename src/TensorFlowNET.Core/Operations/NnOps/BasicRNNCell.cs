@@ -50,13 +50,13 @@ namespace Tensorflow
                 _activation = activation;
         }
 
-        protected override void build(TensorShape inputs_shape)
+        protected override void build(Shape inputs_shape)
         {
             var input_depth = inputs_shape.dims[inputs_shape.ndim - 1];
 
             _kernel = add_weight(
                 _WEIGHTS_VARIABLE_NAME,
-                shape: new[] { input_depth + _num_units, _num_units });
+                shape: new int[] { (int)(input_depth + _num_units), _num_units });
 
             _bias = add_weight(
                 _BIAS_VARIABLE_NAME,

@@ -1,4 +1,4 @@
-﻿using NumSharp;
+﻿using Tensorflow.NumPy;
 using System;
 using System.Linq;
 using static Tensorflow.Binding;
@@ -10,47 +10,66 @@ namespace Tensorflow.Eager
         public EagerTensor(SafeTensorHandleHandle handle)
         {
             _id = ops.uid();
-            EagerTensorHandle = handle;
+            _eagerTensorHandle = handle;
             Resolve();
         }
 
-        public EagerTensor(string value, string device_name) : base(value)
+        #region scalar eager tensor
+        public EagerTensor(bool value) : base(value)
+            => NewEagerTensorHandle(_handle);
+        public EagerTensor(byte value) : base(value)
+            => NewEagerTensorHandle(_handle);
+        public EagerTensor(sbyte value) : base(value)
+            => NewEagerTensorHandle(_handle);
+        public EagerTensor(short value) : base(value)
+            => NewEagerTensorHandle(_handle);
+        public EagerTensor(int value) : base(value)
+            => NewEagerTensorHandle(_handle);
+        public EagerTensor(uint value) : base(value)
+            => NewEagerTensorHandle(_handle);
+        public EagerTensor(long value) : base(value)
+            => NewEagerTensorHandle(_handle);
+        public EagerTensor(ulong value) : base(value)
+            => NewEagerTensorHandle(_handle);
+        public EagerTensor(float value) : base(value)
+            => NewEagerTensorHandle(_handle);
+        public EagerTensor(double value) : base(value)
+            => NewEagerTensorHandle(_handle); 
+        #endregion
+
+        public EagerTensor(object value,string device_name, TF_DataType dtype = TF_DataType.TF_UINT8) : base((float[])value)
+        {
+            throw new NotImplementedException("");
+        }
+
+        public EagerTensor(object value, Shape? shape = null, string device_name = null, TF_DataType dtype = TF_DataType.TF_UINT8) : base((float[])value)
         {
             NewEagerTensorHandle(_handle);
         }
 
-        public EagerTensor(byte[] value, string device_name, TF_DataType dtype) : base(value, dType: dtype)
-        {
-            NewEagerTensorHandle(_handle);
-        }
+        public EagerTensor(Shape shape, TF_DataType dtype) : base(shape, dtype)
+            => NewEagerTensorHandle(_handle);
 
-        public EagerTensor(string[] value, string device_name) : base(value)
-        {
-            NewEagerTensorHandle(_handle);
-        }
+        public EagerTensor(Array array, Shape shape) : base(array, shape)
+            => NewEagerTensorHandle(_handle);
 
-        public EagerTensor(NDArray value, string device_name) : base(value)
-        {
-            NewEagerTensorHandle(_handle);
-        }
+        public EagerTensor(byte[] bytes, Shape shape, TF_DataType dtype) : base(bytes, shape, dtype)
+            => NewEagerTensorHandle(_handle);
 
-        void NewEagerTensorHandle(IntPtr h)
+        void NewEagerTensorHandle(SafeTensorHandle h)
         {
             _id = ops.uid();
-            EagerTensorHandle = c_api.TFE_NewTensorHandle(h, tf.Status.Handle);
-            tf.Status.Check(true);
+            _eagerTensorHandle = c_api.TFE_NewTensorHandle(h, tf.Status.Handle);
 #if TRACK_TENSOR_LIFE
-            print($"New EagerTensorHandle {EagerTensorHandle} {Id} From 0x{h.ToString("x16")}");
+            Console.WriteLine($"New EagerTensor {_eagerTensorHandle}");
 #endif
+            tf.Status.Check(true);
         }
 
         private void Resolve()
         {
-            _handle = c_api.TFE_TensorHandleResolve(EagerTensorHandle, tf.Status.Handle);
+            _handle = c_api.TFE_TensorHandleResolve(_eagerTensorHandle, tf.Status.Handle);
             tf.Status.Check(true);
-#if TRACK_TENSOR_LIFE
-            print($"Take EagerTensorHandle {EagerTensorHandle} {Id} Resolving 0x{_handle.ToString("x16")}");
-#endif
         }
 
         /// <summary>
@@ -77,12 +96,6 @@ namespace Tensorflow.Eager
                 // need to export
                 // c_api.TF_GraphSetOutputHandleShapesAndTypes(target_t.graph, target_t._as_tf_output(), 0, new IntPtr[0], new int[0], new DataType[0], tf.Status.Handle);
             }
-        }
-
-        protected override void DisposeUnmanagedResources(IntPtr handle)
-        {
-            base.DisposeUnmanagedResources(handle);
-            EagerTensorHandle.Dispose();
         }
     }
 }

@@ -345,7 +345,7 @@ namespace Tensorflow
             return ByteString.CopyFromUtf8(value ?? string.Empty);
         }
 
-        public TensorShapeProto _MakeShape(TensorShape shape, AttrDef attr_def)
+        public TensorShapeProto _MakeShape(Shape shape, AttrDef attr_def)
         {
             return shape.as_proto();
         }
@@ -380,7 +380,8 @@ namespace Tensorflow
                     attr_value.List.Type.AddRange((value as IList<TF_DataType>).Select(x => _MakeType(x, attr_def)));
                     break;
                 case "list(int)":
-                    attr_value.List.I.AddRange((value as int[]).Select(x => Convert.ToInt64(x)));
+                    if (value != null)
+                        attr_value.List.I.AddRange((value as int[]).Select(x => Convert.ToInt64(x)));
                     break;
                 case "bool":
                     attr_value.B = (bool)value;
@@ -400,7 +401,7 @@ namespace Tensorflow
                     if (value == null && attr_def.DefaultValue != null)
                         attr_value.Shape = attr_def.DefaultValue.Shape;
 
-                    if (value is TensorShape val1)
+                    if (value is Shape val1)
                         attr_value.Shape = val1.as_proto();
                     else if (value is long[] val2)
                         attr_value.Shape = tensor_util.as_shape(val2);
@@ -409,7 +410,7 @@ namespace Tensorflow
 
                     break;
                 case "list(shape)":
-                    attr_value.List.Shape.AddRange((value as TensorShape[]).Select(x => _MakeShape(x, attr_def)));
+                    attr_value.List.Shape.AddRange((value as Shape[]).Select(x => _MakeShape(x, attr_def)));
                     break;
                 default:
                     throw new TypeError($"SetAttrValue: can't not convert attr_def.Type '{attr_def.Type}' to protos.");

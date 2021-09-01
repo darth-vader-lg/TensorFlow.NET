@@ -1,4 +1,4 @@
-﻿using NumSharp;
+﻿using Tensorflow.NumPy;
 using System.Collections.Generic;
 using Tensorflow.Data;
 
@@ -6,7 +6,7 @@ namespace Tensorflow
 {
     public class DatasetManager
     {
-        public IDatasetV2 from_generator<T>(IEnumerable<T> generator, TF_DataType[] output_types, TensorShape[] output_shapes)
+        public IDatasetV2 from_generator<T>(IEnumerable<T> generator, TF_DataType[] output_types, Shape[] output_shapes)
             => new GeneratorDataset();
 
         /// <summary>

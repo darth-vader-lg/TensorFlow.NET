@@ -1,4 +1,4 @@
-﻿using NumSharp;
+﻿using Tensorflow.NumPy;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -18,10 +18,10 @@ namespace Tensorflow
         List<Tensor> items = new List<Tensor>();
 
         public TF_DataType dtype => items.First().dtype;
-        public TensorShape shape => items.First().TensorShape;
+        public Shape shape => items.First().shape;
         public int rank => items.First().rank;
         public Graph graph => items.First().graph;
-        public bool IsEagerTensor => items.First().IsEagerTensor;
+        public bool IsCreatedInGraphMode => items.First().IsCreatedInGraphMode;
         public bool IsList { get; set; }
         public int Length => items.Count();
 

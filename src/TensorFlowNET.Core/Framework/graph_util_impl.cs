@@ -14,7 +14,7 @@
    limitations under the License.
 ******************************************************************************/
 
-using NumSharp;
+using Tensorflow.NumPy;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -97,7 +97,7 @@ namespace Tensorflow
                 {
                     var data = variables_data_map[input_node.Name];
                     output_node = create_const_op(input_node.Name, input_node.Attr["dtype"],
-                                    data, data.shape);
+                                    data, data.dims.Select(x => Convert.ToInt32(x)).ToArray());
                     how_many_converted += 1;
                 }
                 // else if (resource_identity_types.ContainsKey(input_node.Name))
@@ -135,8 +135,9 @@ namespace Tensorflow
             output_node.Attr["dtype"] = dtype;
             output_node.Attr["value"] = new AttrValue()
             {
-                Tensor = tensor_util.make_tensor_proto(
-                data, dtype: dtype.Type.as_tf_dtype(), shape: data_shape)
+                Tensor = tensor_util.make_tensor_proto(data, 
+                    dtype: dtype.Type.as_tf_dtype(), 
+                    shape: data_shape)
             };
 
             return output_node;

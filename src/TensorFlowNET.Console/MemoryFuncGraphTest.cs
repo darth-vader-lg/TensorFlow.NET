@@ -1,4 +1,4 @@
-﻿using NumSharp;
+﻿using Tensorflow.NumPy;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -22,7 +22,7 @@ namespace Tensorflow
 
         Tensor permutation(Tensor tensor)
         {
-            TensorShape shape = (8, 64, 64, 3);
+            Shape shape = (8, 64, 64, 3);
             var images = np.arange(shape.size).astype(np.float32).reshape(shape.dims);
             return tf.constant(images);
         }

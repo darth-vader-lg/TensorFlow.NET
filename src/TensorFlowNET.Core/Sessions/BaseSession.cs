@@ -15,7 +15,7 @@
 ******************************************************************************/
 
 using Google.Protobuf;
-using NumSharp;
+using Tensorflow.NumPy;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -169,60 +169,42 @@ namespace Tensorflow
                                 throw new ValueError($"Tensor {v} does not match the expected dtype {key.dtype}, actual dtype: {v.dtype}");
                             feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), v);
                             break;
-                        case NDArray v:
-                            feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype));
-                            break;
-                        case IntPtr v:
+                        case SafeTensorHandle v:
                             var tensor = new Tensor(v);
                             if (tensor.dtype != key.dtype)
                                 throw new ValueError($"Tensor {v} does not match the expected dtype {key.dtype}, actual dtype: {tensor.dtype}");
-
                             feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), tensor);
                             break;
-#if _REGEN
-                        // @formatter:off — disable formatter after this line
-                        %types = ["bool", "sbyte", "byte", "short", "ushort", "int", "uint", "long", "ulong", "float", "double", "Complex"]
-                        %foreach types%
-                        case #1 v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case #1[] v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        %
-                        // @formatter:on — enable formatter after this line
-#else
-                        // @formatter:off — disable formatter after this line
-                        case bool v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case bool[] v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case sbyte v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case sbyte[] v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case byte v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case byte[] v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case short v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case short[] v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case ushort v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case ushort[] v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case int v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case int[] v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case uint v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case uint[] v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case long v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case long[] v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case ulong v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case ulong[] v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case float v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case float[] v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case double v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case double[] v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case Complex v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        case Complex[] v: feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype)); break;
-                        // @formatter:on — enable formatter after this line
-#endif
-
+                        case bool v:
+                            feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), new Tensor(v));
+                            break;
+                        case byte v:
+                            feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), new Tensor(v));
+                            break;
+                        case int v:
+                            feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), new Tensor(v));
+                            break;
+                        case long v:
+                            feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), new Tensor(v));
+                            break;
+                        case float v:
+                            feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), new Tensor(v));
+                            break;
+                        case double v:
+                            feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), new Tensor(v));
+                            break;
                         case string v:
-                            feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), TensorConverter.ToTensor(v, key.dtype));
+                            feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), new Tensor(v));
+                            break;
+                        case Array v:
+                            feeds[i++] = new KeyValuePair<TF_Output, Tensor>(key._as_tf_output(), new Tensor(v, v.GetShape()));
                             break;
                         default:
-                            throw new NotImplementedException($"feed_dict data type {x.Value?.GetType().Name ?? "<null>"}");
+                            throw new NotImplementedException("");
                     }
                 }
+                else
+                    throw new NotImplementedException("");
             }
 
             var fetches = fetch_list.Select(x => x._as_tf_output()).ToArray();
@@ -243,7 +225,7 @@ namespace Tensorflow
             c_api.TF_SessionRun(_handle,
                 run_options: null,
                 inputs: feed_dict.Select(f => f.Key).ToArray(),
-                input_values: feed_dict.Select(f => (IntPtr)f.Value).ToArray(),
+                input_values: feed_dict.Select(f => f.Value.Handle.DangerousGetHandle()).ToArray(),
                 ninputs: feed_dict.Length,
                 outputs: fetch_list,
                 output_values: output_values,
@@ -258,12 +240,37 @@ namespace Tensorflow
             var result = new NDArray[fetch_list.Length];
 
             for (int i = 0; i < fetch_list.Length; i++)
-                result[i] = fetchValue(output_values[i]);
+                result[i] = fetchValue(new SafeTensorHandle(output_values[i]));
 
             return result;
         }
 
-        private static unsafe NDArray fetchValue(IntPtr output)
+        public unsafe Tensor eval(Tensor tensor)
+        {
+            var status = tf.Status;
+
+            var output_values = new IntPtr[1];
+            var fetch_list = new[] { tensor._as_tf_output() };
+
+            c_api.TF_SessionRun(_handle,
+                run_options: null,
+                inputs: new TF_Output[0],
+                input_values: new IntPtr[0],
+                ninputs: 0,
+                outputs: fetch_list,
+                output_values: output_values,
+                noutputs: 1,
+                target_opers: new IntPtr[0],
+                ntargets: 0,
+                run_metadata: IntPtr.Zero,
+                status: status.Handle);
+
+            status.Check(true);
+
+            return new Tensor(new SafeTensorHandle(output_values[0]));
+        }
+
+        private static unsafe NDArray fetchValue(SafeTensorHandle output)
         {
             var tensor = new Tensor(output);
             return tensor.numpy();

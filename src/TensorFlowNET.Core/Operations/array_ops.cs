@@ -14,7 +14,7 @@
    limitations under the License.
 ******************************************************************************/
 
-using NumSharp;
+using Tensorflow.NumPy;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -64,14 +64,14 @@ namespace Tensorflow
             TF_DataType dtype = TF_DataType.DtInvalid,
             int[] shape = null,
             string name = "Const",
-            bool verify_shape = false) => constant_op._constant_impl(value,
-                dtype,
-                shape,
-                name,
+            bool verify_shape = false) => constant_op.constant(value,
+                dtype: dtype,
+                shape: shape,
+                name: name,
                 verify_shape: verify_shape,
                 allow_broadcast: false);
 
-        public static Tensor zeros(TensorShape shape, TF_DataType dtype = TF_DataType.TF_FLOAT, string name = null)
+        public static Tensor zeros(Shape shape, TF_DataType dtype = TF_DataType.TF_FLOAT, string name = null)
         {
             dtype = dtype.as_base_dtype();
 
@@ -89,6 +89,12 @@ namespace Tensorflow
                             break;
                         case TF_DataType.TF_FLOAT:
                             zeros = constant(0f);
+                            break;
+                        case TF_DataType.TF_INT8:
+                            zeros = constant((sbyte)0);
+                            break;
+                        case TF_DataType.TF_UINT8:
+                            zeros = constant((byte)0);
                             break;
                         default:
                             zeros = constant(0);
@@ -130,9 +136,9 @@ namespace Tensorflow
                 var tensor_tensor = ops.convert_to_tensor(tensor, name: "tensor");
                 var mask_tensor = ops.convert_to_tensor(mask, name: "mask");
 
-                var shape_mask = mask_tensor.TensorShape;
+                var shape_mask = mask_tensor.shape;
                 var ndims_mask = shape_mask.ndim;
-                var shape_tensor = tensor_tensor.TensorShape;
+                var shape_tensor = tensor_tensor.shape;
 
                 if (ndims_mask < 1)
                     throw new ValueError("mask cannot be scalar.");
@@ -146,9 +152,9 @@ namespace Tensorflow
                 }, 0);
                 tensor_tensor = reshape(tensor_tensor, shape1);
                 var first_dim = shape_tensor.dims.Skip(axis).Take(ndims_mask).First();
-                var s1 = tensor_shape.as_shape(shape_tensor.dims.Take(axis).ToArray());
+                var s1 = new Shape(shape_tensor.dims.Take(axis).ToArray());
                 var s2 = s1.concatenate(new[] { first_dim }).concatenate(shape_tensor.dims.Skip(axis + ndims_mask).ToArray());
-                tensor_tensor.set_shape(s2);
+                tensor_tensor.shape = s2;
 
                 mask_tensor = reshape(mask_tensor, new[] { -1 });
                 return _apply_mask_1d(tensor_tensor, mask_tensor, axis);
@@ -186,10 +192,13 @@ namespace Tensorflow
 
         private static Tensor _constant_if_small(int value, Tensor shape)
         {
-            return shape < 1000;
+            if (shape.dtype == TF_DataType.TF_INT64)
+                return shape < 1000L;
+            else
+                return shape < 1000;
         }
 
-        private static Tensor _constant_if_small<T>(T value, TensorShape shape, TF_DataType dtype, string name)
+        private static Tensor _constant_if_small<T>(T value, Shape shape, TF_DataType dtype, string name)
         {
             if (shape.size < 1000)
             {
@@ -212,7 +221,7 @@ namespace Tensorflow
             return _autopacking_helper(v, dtype, name == null ? "packed" : name);
         }
 
-        private static TF_DataType _get_dtype_from_nested_lists(IEnumerable<object> list_or_tuple)
+        private static TF_DataType _get_dtype_from_nested_lists<T>(IEnumerable<T> list_or_tuple)
         {
             TF_DataType dtype = TF_DataType.DtInvalid;
 
@@ -321,23 +330,12 @@ namespace Tensorflow
         public static Tensor rank(Tensor input, string name = null)
             => rank_internal(input, name, optimize: true);
 
-        public static Tensor rank(Tensor[] inputs, string name = null)
-        {
-            return tf_with(ops.name_scope(name, "Rank", new { inputs }), scope =>
-            {
-                name = scope;
-                var input_tensor = ops.convert_to_tensor(inputs);
-                return constant_op.constant(input_tensor.NDims, dtype: tf.int32, name: name);
-            });
-        }
-
         public static Tensor rank_internal(Tensor input, string name = null, bool optimize = true)
         {
             return tf_with(ops.name_scope(name, "Rank", new List<Tensor> { input }), scope =>
             {
                 name = scope;
-                var input_tensor = ops.convert_to_tensor(input);
-                var input_shape = tensor_util.to_shape(input_tensor.shape);
+                var input_shape = input.shape;
                 if (optimize && input_shape.ndim > 0)
                     return constant_op.constant(input_shape.ndim, dtype: tf.int32, name: name);
                 else
@@ -361,7 +359,7 @@ namespace Tensorflow
                 tensor = ops.convert_to_tensor(tensor, name: "tensor");
 
                 // is_fully_defined return unexpected value.
-                if (optimize && tensor_util.to_shape(tensor.shape).is_fully_defined() && dtype != TF_DataType.TF_VARIANT)
+                if (optimize && tensor.shape.IsFullyDefined && dtype != TF_DataType.TF_VARIANT)
                 {
 
                 }
@@ -381,7 +379,7 @@ namespace Tensorflow
         public static Tensor reshape(Tensor tensor, Tensor shape, string name = null)
             => gen_array_ops.reshape(tensor, shape, name: name);
 
-        public static Tensor reshape(Tensor tensor, TensorShape shape, string name = null)
+        public static Tensor reshape(Tensor tensor, Shape shape, string name = null)
             => gen_array_ops.reshape(tensor, shape, name: name);
 
         public static Tensor reshape(Tensor tensor, object[] shape, string name = null)
@@ -424,7 +422,7 @@ namespace Tensorflow
             });
         }
 
-        public static Tensor ones(TensorShape shape, TF_DataType dtype = TF_DataType.TF_FLOAT, string name = null)
+        public static Tensor ones(Shape shape, TF_DataType dtype = TF_DataType.TF_FLOAT, string name = null)
             => tf_with(ops.name_scope(name, "ones", shape), scope =>
             {
                 dtype = dtype.as_base_dtype();
@@ -499,7 +497,7 @@ namespace Tensorflow
                 return ops.convert_to_tensor(values, name: name);
             }
 
-            var value_shape = ops.convert_to_tensor(values[0], name: name).TensorShape;
+            var value_shape = ops.convert_to_tensor(values[0], name: name).shape;
 
             return gen_array_ops.pack(values, axis: axis, name: name);
         }
@@ -509,8 +507,8 @@ namespace Tensorflow
             if (num == null)
             {
                 value = ops.convert_to_tensor(value);
-                var value_shape = value.TensorShape;
-                num = value_shape.dims[axis];
+                var value_shape = value.shape;
+                num = (int)value_shape.dims[axis];
             }
 
             return gen_array_ops.unpack(value, num: num.Value, axis: axis, name: name);
@@ -574,7 +572,7 @@ namespace Tensorflow
         public static Tensor shape_v2(Tensor input, string name = null, TF_DataType out_type = TF_DataType.TF_INT32)
             => shape_internal(input, name, optimize: true, out_type: out_type);
 
-        public static Tensor size(Tensor input, string name = null, bool optimize = true, TF_DataType out_type = TF_DataType.TF_INT32)
+        public static Tensor size<T>(T input, string name = null, bool optimize = true, TF_DataType out_type = TF_DataType.TF_INT32)
             => size_internal(input, name, optimize: optimize, out_type: out_type);
 
         public static Tensor shape_internal(Tensor input, string name = null, bool optimize = true, TF_DataType out_type = TF_DataType.TF_INT32)
@@ -585,11 +583,13 @@ namespace Tensorflow
 
                 if (!tf.Context.executing_eagerly())
                 {
-                    var input_shape = input.TensorShape;
-                    if (optimize && input.NDims > -1 && input_shape.is_fully_defined())
+                    var input_shape = input.shape;
+                    if (optimize && input.ndim > -1 && input_shape.IsFullyDefined)
                     {
-                        var nd = np.array(input.shape).astype(out_type.as_numpy_dtype());
-                        return constant_op.constant(nd, name: name);
+                        if(out_type == TF_DataType.TF_INT32)
+                            return constant_op.constant(input.shape.as_int_list(), name: name);
+                        else
+                            return constant_op.constant(input.shape.dims, name: name);
                     }
                 }
 
@@ -597,23 +597,23 @@ namespace Tensorflow
             });
         }
 
-        private static Tensor size_internal(Tensor input, string name = null, bool optimize = true, TF_DataType out_type = TF_DataType.TF_INT32)
+        private static Tensor size_internal<T>(T input, string name = null, bool optimize = true, TF_DataType out_type = TF_DataType.TF_INT32)
         {
             return tf_with(ops.name_scope(name, "Size", new { input }), scope =>
             {
                 name = scope;
 
                 var input_tensor = ops.convert_to_tensor(input);
-                var input_shape = tensor_util.to_shape(input_tensor.shape);
+                var input_shape = input_tensor.shape;
                 if (optimize)
                 {
-                    if (input_shape.is_fully_defined())
+                    if (input_shape.IsFullyDefined)
                     {
                         return constant_op.constant(input_shape.size, dtype: out_type, name: name);
                     }
                 }
 
-                return gen_array_ops.size(input, name: name, out_type: out_type);
+                return gen_array_ops.size(input_tensor, name: name, out_type: out_type);
             });
         }
 
@@ -630,7 +630,7 @@ namespace Tensorflow
                 tensor = ops.convert_to_tensor(tensor, name: "tensor");
 
                 // is_fully_defined return unexpected value.
-                if (optimize && tensor_util.to_shape(tensor.shape).is_fully_defined() && dtype != TF_DataType.TF_VARIANT)
+                if (optimize && tensor.shape.IsFullyDefined && dtype != TF_DataType.TF_VARIANT)
                 {
 
                 }
@@ -777,10 +777,10 @@ namespace Tensorflow
                 int k = 0,
                 int num_rows = -1,
                 int num_cols = -1,
-                float padding_value = 0,
+                float padding_value = 0f,
                 string align = "RIGHT_LEFT")
             => tf.Context.ExecuteOp("MatrixDiagV3", name, 
-                new ExecuteOpArgs(diagonal, k, num_rows, num_cols, padding_value)
+                new ExecuteOpArgs(diagonal, k, num_rows, num_cols, ops.convert_to_tensor(padding_value, dtype: diagonal.dtype))
                     .SetAttributes(new { align }));
 
         public static Tensor matrix_set_diag(Tensor input,
@@ -790,6 +790,40 @@ namespace Tensorflow
             string align = "RIGHT_LEFT")
                 => tf.Context.ExecuteOp("MatrixSetDiagV3", name, new ExecuteOpArgs(input, diagonal, k)
                     .SetAttributes(new { align }));
+
+        public static Tensor[] meshgrid<T>(T[] array, bool copy = true, bool sparse = false, string indexing = "xy")
+        {
+            return tf_with(ops.name_scope(null, "meshgrid", array), scope =>
+            {
+                var ndim = array.Length;
+                var s0 = range(ndim).Select(x => 1).ToArray();
+
+                var output = new List<Tensor>();
+                foreach (var (i, x) in enumerate(array))
+                {
+                    var shape = s0[..i].concat(new[] { -1 }).concat(s0[(i + 1)..]);
+                    output.add(reshape(stack(x), shape));
+                }
+
+                // Create parameters for broadcasting each tensor to the full size
+                var shapes = array.Select(x => size(x)).ToArray();
+                var output_dtype = _get_dtype_from_nested_lists(array).as_base_dtype();
+                if (indexing == "xy" && ndim > 1)
+                {
+                    output[0] = reshape(output[0], new[] { 1, -1 }.concat(range(ndim - 2).Select(x => 1).ToArray()));
+                    output[1] = reshape(output[1], new[] { -1, 1 }.concat(range(ndim - 2).Select(x => 1).ToArray()));
+                    (shapes[0], shapes[1]) = (shapes[1], shapes[0]);
+                }
+
+                if(sparse)
+                    return output.ToArray();
+                else
+                {
+                    var mult_fact = ones(shapes, output_dtype);
+                    return output.Select(x => x * mult_fact).ToArray();
+                }
+            });
+        }
 
         /// <summary>
         /// Computes the shape of a broadcast given symbolic shapes.
@@ -869,7 +903,7 @@ namespace Tensorflow
             return gen_array_ops.gather_v2(@params, indices, axis, name: name);
         }
 
-        public static Tensor transpose<T1>(T1 a, TensorShape perm, string name = "transpose", bool conjugate = false)
+        public static Tensor transpose<T1>(T1 a, Axis perm, string name = "transpose", bool conjugate = false)
         {
             return tf_with(ops.name_scope(name, "transpose", new { a }), scope =>
             {
@@ -896,7 +930,7 @@ namespace Tensorflow
             string name = "split")
         {
             if (num == -1)
-                num = size_splits.shape[0];
+                num = (int)size_splits.shape[0];
 
             return gen_array_ops.split_v(value, size_splits, axis, num, name: name);
         }
@@ -968,27 +1002,27 @@ namespace Tensorflow
             if (!tf.Context.executing_eagerly())
             {
                 var paddings_constant = tensor_util.constant_value(paddings);
-                var input_shape = result.op.inputs[0].TensorShape;
+                var input_shape = result.op.inputs[0].shape;
                 if (input_shape.ndim > -1 &&
-                    !result.TensorShape.is_fully_defined() &&
+                    !result.shape.IsFullyDefined &&
                     !(paddings_constant is null))
                 {
                     var new_shape = new List<int>();
-                    foreach ((NDArray padding, int dim) in zip(paddings_constant.GetNDArrays(), np.array(input_shape.dims).GetNDArrays()))
+                    foreach ((NDArray padding, int dim) in zip(paddings_constant, input_shape.as_int_list()))
                     {
-                        if (padding is null || dim == -1 || padding.GetData<int>().Contains(-1))
+                        if (padding is null || dim == -1 || padding.ToArray<int>().Contains(-1))
                             new_shape.Add(-1);
                         else
-                            new_shape.Add(np.sum(padding) + dim);
+                            new_shape.Add((int)np.sum(padding) + dim);
                     }
-                    result.set_shape(new_shape.ToArray());
+                    result.shape = new_shape.ToArray();
                 }
             }
 
             return result;
         }
 
-        public static Tensor placeholder(TF_DataType dtype, TensorShape shape = null, string name = null)
+        public static Tensor placeholder(TF_DataType dtype, Shape shape = null, string name = null)
         {
             if (tf.Context.executing_eagerly())
                 throw new RuntimeError("tf.placeholder() is not compatible with eager execution.");

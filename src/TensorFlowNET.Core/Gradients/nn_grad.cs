@@ -17,6 +17,7 @@
 using System;
 using System.Linq;
 using Tensorflow.Operations;
+using static Tensorflow.Binding;
 
 namespace Tensorflow.Gradients
 {
@@ -69,7 +70,7 @@ namespace Tensorflow.Gradients
 
             var softmax = op.outputs[0];
             var mul = grad_softmax * softmax;
-            var sum_channels = math_ops.reduce_sum(mul, -1, keepdims: true);
+            var sum_channels = math_ops.reduce_sum(mul, axis: constant_op.constant(-1), keepdims: true);
             var sub = grad_softmax - sum_channels;
             return new Tensor[] { sub * softmax };
         }
@@ -323,7 +324,7 @@ namespace Tensorflow.Gradients
 
             // Compute linear indices(flattened to 1D).
             var cast1 = math_ops.cast(outerdim, TF_DataType.TF_INT64);
-            var range2 = math_ops.range(0L, cast1 * in_lastdim, in_lastdim);
+            var range2 = math_ops.range(tf.constant(0L), cast1 * in_lastdim, in_lastdim);
             var dim2 = array_ops.expand_dims(range2, -1);
             var cast2 = math_ops.cast(dim2, TF_DataType.TF_INT32);
             var ind = array_ops.reshape(ind_2d + cast2, new int[] { -1 });

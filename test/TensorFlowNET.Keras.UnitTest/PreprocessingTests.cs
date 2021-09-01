@@ -3,7 +3,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
-using NumSharp;
+using Tensorflow.NumPy;
 using static Tensorflow.KerasApi;
 using Tensorflow;
 using Tensorflow.Keras.Datasets;
@@ -238,15 +238,15 @@ namespace TensorFlowNET.Keras.UnitTest
             var sequences = tokenizer.texts_to_sequences(texts);
             var padded = keras.preprocessing.sequence.pad_sequences(sequences);
 
-            Assert.AreEqual(4, padded.shape[0]);
-            Assert.AreEqual(22, padded.shape[1]);
+            Assert.AreEqual(4, padded.dims[0]);
+            Assert.AreEqual(22, padded.dims[1]);
 
-            Assert.AreEqual(tokenizer.word_index["worst"], padded[0, 19].GetInt32());
+            Assert.AreEqual(padded[0, 19], tokenizer.word_index["worst"]);
             for (var i = 0; i < 8; i++)
-                Assert.AreEqual(0, padded[0, i].GetInt32());
-            Assert.AreEqual(tokenizer.word_index["proud"], padded[1, 10].GetInt32());
+                Assert.AreEqual(padded[0, i], 0);
+            Assert.AreEqual(padded[1, 10], tokenizer.word_index["proud"]);
             for (var i = 0; i < 20; i++)
-                Assert.AreNotEqual(0, padded[1, i].GetInt32());
+                Assert.AreNotEqual(padded[1, i], 0);
         }
 
         [TestMethod]
@@ -258,15 +258,15 @@ namespace TensorFlowNET.Keras.UnitTest
             var sequences = tokenizer.texts_to_sequences(texts);
             var padded = keras.preprocessing.sequence.pad_sequences(sequences,maxlen:15);
 
-            Assert.AreEqual(4, padded.shape[0]);
-            Assert.AreEqual(15, padded.shape[1]);
+            Assert.AreEqual(4, padded.dims[0]);
+            Assert.AreEqual(15, padded.dims[1]);
 
-            Assert.AreEqual(tokenizer.word_index["worst"], padded[0, 12].GetInt32());
+            Assert.AreEqual(padded[0, 12], tokenizer.word_index["worst"]);
             for (var i = 0; i < 3; i++)
-                Assert.AreEqual(0, padded[0, i].GetInt32());
-            Assert.AreEqual(tokenizer.word_index["proud"], padded[1, 3].GetInt32());
+                Assert.AreEqual(padded[0, i], 0);
+            Assert.AreEqual(padded[1, 3], tokenizer.word_index["proud"]);
             for (var i = 0; i < 15; i++)
-                Assert.AreNotEqual(0, padded[1, i].GetInt32());
+                Assert.AreNotEqual(padded[1, i], 0);
         }
 
         [TestMethod]
@@ -278,13 +278,13 @@ namespace TensorFlowNET.Keras.UnitTest
             var sequences = tokenizer.texts_to_sequences(texts);
             var padded = keras.preprocessing.sequence.pad_sequences(sequences, maxlen: 45);
 
-            Assert.AreEqual(4, padded.shape[0]);
-            Assert.AreEqual(45, padded.shape[1]);
+            Assert.AreEqual(4, padded.dims[0]);
+            Assert.AreEqual(45, padded.dims[1]);
 
-            Assert.AreEqual(tokenizer.word_index["worst"], padded[0, 42].GetInt32());
+            Assert.AreEqual(padded[0, 42], tokenizer.word_index["worst"]);
             for (var i = 0; i < 33; i++)
-                Assert.AreEqual(0, padded[0, i].GetInt32());
-            Assert.AreEqual(tokenizer.word_index["proud"], padded[1, 33].GetInt32());
+                Assert.AreEqual(padded[0, i], 0);
+            Assert.AreEqual(padded[1, 33], tokenizer.word_index["proud"]);
         }
 
         [TestMethod]
@@ -296,15 +296,15 @@ namespace TensorFlowNET.Keras.UnitTest
             var sequences = tokenizer.texts_to_sequences(texts);
             var padded = keras.preprocessing.sequence.pad_sequences(sequences, maxlen: 15, padding: "post", truncating: "post");
 
-            Assert.AreEqual(4, padded.shape[0]);
-            Assert.AreEqual(15, padded.shape[1]);
+            Assert.AreEqual(4, padded.dims[0]);
+            Assert.AreEqual(15, padded.dims[1]);
 
-            Assert.AreEqual(tokenizer.word_index["worst"], padded[0, 9].GetInt32());
+            Assert.AreEqual(padded[0, 9], tokenizer.word_index["worst"]);
             for (var i = 12; i < 15; i++)
-                Assert.AreEqual(0, padded[0, i].GetInt32());
-            Assert.AreEqual(tokenizer.word_index["proud"], padded[1, 10].GetInt32());
+                Assert.AreEqual(padded[0, i], 0);
+            Assert.AreEqual(padded[1, 10], tokenizer.word_index["proud"]);
             for (var i = 0; i < 15; i++)
-                Assert.AreNotEqual(0, padded[1, i].GetInt32());
+                Assert.AreNotEqual(padded[1, i], 0);
         }
 
         [TestMethod]
@@ -316,13 +316,13 @@ namespace TensorFlowNET.Keras.UnitTest
             var sequences = tokenizer.texts_to_sequences(texts);
             var padded = keras.preprocessing.sequence.pad_sequences(sequences, maxlen: 45, padding: "post", truncating: "post");
 
-            Assert.AreEqual(4, padded.shape[0]);
-            Assert.AreEqual(45, padded.shape[1]);
+            Assert.AreEqual(4, padded.dims[0]);
+            Assert.AreEqual(45, padded.dims[1]);
 
-            Assert.AreEqual(tokenizer.word_index["worst"], padded[0, 9].GetInt32());
+            Assert.AreEqual(padded[0, 9], tokenizer.word_index["worst"]);
             for (var i = 32; i < 45; i++)
-                Assert.AreEqual(0, padded[0, i].GetInt32());
-            Assert.AreEqual(tokenizer.word_index["proud"], padded[1, 10].GetInt32());
+                Assert.AreEqual(padded[0, i], 0);
+            Assert.AreEqual(padded[1, 10], tokenizer.word_index["proud"]);
         }
 
         [TestMethod]
@@ -335,10 +335,10 @@ namespace TensorFlowNET.Keras.UnitTest
 
             var matrix = tokenizer.texts_to_matrix(texts);
 
-            Assert.AreEqual(texts.Length, matrix.shape[0]);
+            Assert.AreEqual(texts.Length, matrix.dims[0]);
 
-            CompareLists(new double[] { 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, matrix[0].ToArray<double>());
-            CompareLists(new double[] { 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }, matrix[1].ToArray<double>());
+            Assert.IsTrue(Enumerable.SequenceEqual(new double[] { 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, matrix[0].ToArray<double>()));
+            Assert.IsTrue(Enumerable.SequenceEqual(new double[] { 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }, matrix[1].ToArray<double>()));
         }
 
         [TestMethod]
@@ -351,10 +351,10 @@ namespace TensorFlowNET.Keras.UnitTest
 
             var matrix = tokenizer.texts_to_matrix(texts, mode:"count");
 
-            Assert.AreEqual(texts.Length, matrix.shape[0]);
+            Assert.AreEqual(texts.Length, matrix.dims[0]);
 
-            CompareLists(new double[] { 0, 2, 2, 2, 1, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, matrix[0].ToArray<double>());
-            CompareLists(new double[] { 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }, matrix[1].ToArray<double>());
+            Assert.IsTrue(Enumerable.SequenceEqual(new double[] { 0, 2, 2, 2, 1, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, matrix[0].ToArray<double>()));
+            Assert.IsTrue(Enumerable.SequenceEqual(new double[] { 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }, matrix[1].ToArray<double>()));
         }
 
         [TestMethod]
@@ -367,15 +367,15 @@ namespace TensorFlowNET.Keras.UnitTest
 
             var matrix = tokenizer.texts_to_matrix(texts, mode: "freq");
 
-            Assert.AreEqual(texts.Length, matrix.shape[0]);
+            Assert.AreEqual(texts.Length, matrix.dims[0]);
 
             double t12 = 2.0 / 12.0;
             double o12 = 1.0 / 12.0;
             double t22 = 2.0 / 22.0;
             double o22 = 1.0 / 22.0;
 
-            CompareLists(new double[] { 0, t12, t12, t12, o12, t12, t12, o12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, matrix[0].ToArray<double>());
-            CompareLists(new double[] { 0, 0, 0, 0, 0, o22, 0, 0, o22, o22, o22, o22, o22, o22, o22, o22, t22, o22, o22, o22, o22, o22, o22, o22, o22, o22, o22, o22 }, matrix[1].ToArray<double>());
+            Assert.IsTrue(Enumerable.SequenceEqual(new double[] { 0, t12, t12, t12, o12, t12, t12, o12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, matrix[0].ToArray<double>()));
+            Assert.IsTrue(Enumerable.SequenceEqual(new double[] { 0, 0, 0, 0, 0, o22, 0, 0, o22, o22, o22, o22, o22, o22, o22, o22, t22, o22, o22, o22, o22, o22, o22, o22, o22, o22, o22, o22 }, matrix[1].ToArray<double>()));
         }
 
         [TestMethod]
@@ -388,7 +388,7 @@ namespace TensorFlowNET.Keras.UnitTest
 
             var matrix = tokenizer.texts_to_matrix(texts, mode: "tfidf");
 
-            Assert.AreEqual(texts.Length, matrix.shape[0]);
+            Assert.AreEqual(texts.Length, matrix.dims[0]);
 
             double t1 = 1.1736001944781467;
             double t2 = 0.69314718055994529;
@@ -396,18 +396,8 @@ namespace TensorFlowNET.Keras.UnitTest
             double t4 = 1.0986122886681098;
             double t5 = 0.69314718055994529;
 
-            CompareLists(new double[] { 0, t1, t1, t1, t2, 0, t1, t2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, matrix[0].ToArray<double>());
-            CompareLists(new double[] { 0, 0, 0, 0, 0, 0, 0, 0, t5, t5, t5, t5, t5, t5, t5, t5, t3, t4, t4, t4, t4, t4, t4, t4, t4, t4, t4, t4 }, matrix[1].ToArray<double>());
+            Assert.IsTrue(Enumerable.SequenceEqual(new double[] { 0, t1, t1, t1, t2, 0, t1, t2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, matrix[0].ToArray<double>()));
+            Assert.IsTrue(Enumerable.SequenceEqual(new double[] { 0, 0, 0, 0, 0, 0, 0, 0, t5, t5, t5, t5, t5, t5, t5, t5, t3, t4, t4, t4, t4, t4, t4, t4, t4, t4, t4, t4 }, matrix[1].ToArray<double>()));
         }
-
-        private void CompareLists<T>(IList<T> expected, IList<T> actual)
-        {
-            Assert.AreEqual(expected.Count, actual.Count);
-            for (var i = 0; i < expected.Count; i++)
-            {
-                Assert.AreEqual(expected[i], actual[i]);
-            }
-        }
-
     }
 }

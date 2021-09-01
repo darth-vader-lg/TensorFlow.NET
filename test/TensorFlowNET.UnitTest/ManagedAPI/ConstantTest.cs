@@ -1,5 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NumSharp;
+using Tensorflow.NumPy;
 using System;
 using System.Linq;
 using Tensorflow;
@@ -136,16 +136,16 @@ namespace TensorFlowNET.UnitTest.Basics
         [TestMethod]
         public void NDimConst()
         {
-            var nd = np.array(new int[][]
+            var nd = np.array(new int[,]
             {
-                new int[]{ 3, 1, 1 },
-                new int[]{ 2, 1, 3 }
+                { 3, 1, 1 },
+                { 2, 1, 3 }
             });
 
             var tensor = tf.constant(nd);
             var data = tensor.numpy().ToArray<int>();
 
-            Assert.IsTrue(Enumerable.SequenceEqual(new int[] { 2, 3 }, tensor.shape));
+            Assert.IsTrue(Enumerable.SequenceEqual(new long[] { 2, 3 }, tensor.shape.dims));
             Assert.IsTrue(Enumerable.SequenceEqual(new int[] { 3, 1, 1, 2, 1, 3 }, data));
         }
 

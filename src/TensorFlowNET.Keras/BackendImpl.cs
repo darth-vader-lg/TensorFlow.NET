@@ -14,7 +14,7 @@
    limitations under the License.
 ******************************************************************************/
 
-using NumSharp;
+using Tensorflow.NumPy;
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -64,7 +64,7 @@ namespace Tensorflow.Keras
             _GRAPH_VARIABLES[graph.graph_key] = v;
         }
 
-        public Tensor placeholder(TensorShape shape = null,
+        public Tensor placeholder(Shape shape = null,
             int ndim = -1,
             TF_DataType dtype = TF_DataType.DtInvalid,
             bool sparse = false,
@@ -142,7 +142,7 @@ namespace Tensorflow.Keras
         {
             if (x.dtype.as_base_dtype() == TF_DataType.TF_BOOL)
                 x = math_ops.cast(x, TF_DataType.TF_FLOAT);
-            return math_ops.reduce_mean(x, axis: new[] { axis }, keepdims: false);
+            return math_ops.reduce_mean(x, axis: axis, keepdims: false);
         }
 
         public GraphLearningPhase learning_phase()
@@ -260,7 +260,19 @@ namespace Tensorflow.Keras
             if (from_logits)
                 return tf.nn.softmax_cross_entropy_with_logits_v2(labels: target, logits: output, axis: axis);
 
-            throw new NotImplementedException("");
+            if (output.op != null && output.op.type == "Softmax")
+            {
+                if (output.op.inputs.Length != 1) throw new ApplicationException();
+                var o = output = output.op.inputs[0];
+                return tf.nn.softmax_cross_entropy_with_logits_v2(labels: target, logits: o, axis: axis);
+            }
+
+            // scale preds so that the class probas of each sample sum to 1
+            output = output / math_ops.reduce_sum(output, new Axis(axis), true);
+            // Compute cross entropy from probabilities.
+            var epsilon_ = constant_op.constant(epsilon(), output.dtype.as_base_dtype());
+            output = clip_ops.clip_by_value(output, epsilon_, 1.0 - epsilon_);
+            return -math_ops.reduce_sum(target * math_ops.log(output), new Axis(axis));
         }
 
         /// <summary>
@@ -297,12 +309,12 @@ namespace Tensorflow.Keras
                 // x = permute_dimensions(x, [0, 3, 1, 2]);
                 throw new NotImplementedException("");
 
-            int new_height = original_shape[rows] < 0 ? -1 : original_shape[rows] * height_factor;
-            int new_width = original_shape[cols] < 0 ? -1 : original_shape[cols] * width_factor;
+            int new_height = original_shape[rows] < 0 ? -1 : (int)original_shape[rows] * height_factor;
+            int new_width = original_shape[cols] < 0 ? -1 : (int)original_shape[cols] * width_factor;
 
-            TensorShape output_shape = data_format == "channels_first" ?
+            Shape output_shape = data_format == "channels_first" ?
                 (-1, -1, new_height, new_width) : (-1, new_height, new_width, -1);
-            x.set_shape(output_shape);
+            x.shape = output_shape;
             return x;
         }
 
@@ -316,7 +328,7 @@ namespace Tensorflow.Keras
         {
             if(axis < 0)
             {
-                var rank = tensors[0].NDims;
+                var rank = tensors[0].ndim;
                 if (rank > -1)
                     axis += rank;
                 else
@@ -329,10 +341,10 @@ namespace Tensorflow.Keras
         public Tensor conv2d_transpose(Tensor x,
                      IVariableV1 kernel,
                      Tensor output_shape,
-                     TensorShape strides = null,
+                     Shape strides = null,
                      string padding = "valid",
                      string data_format = null,
-                     TensorShape dilation_rate = null)
+                     Shape dilation_rate = null)
         {
             var force_transpose = false;
             if (data_format == "channels_first" && !dilation_rate.Equals(new[] { 1, 1 }))
@@ -340,7 +352,7 @@ namespace Tensorflow.Keras
             // x, tf_data_format = _preprocess_conv2d_input(x, data_format, force_transpose)
             var tf_data_format = "NHWC";
             padding = padding.ToUpper();
-            strides = new TensorShape(1, strides[0], strides[1], 1);
+            strides = new Shape(1, strides[0], strides[1], 1);
             if (dilation_rate.Equals(new[] { 1, 1 }))
                 x = nn_impl.conv2d_transpose(x, kernel, output_shape, strides,
                     padding: padding,

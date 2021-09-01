@@ -32,7 +32,7 @@ namespace Tensorflow
             /// <param name="seed"></param>
             /// <param name="name"></param>
             /// <returns></returns>
-            public Tensor normal(TensorShape shape,
+            public Tensor normal(Shape shape,
                 float mean = 0.0f,
                 float stddev = 1.0f,
                 TF_DataType dtype = TF_DataType.TF_FLOAT,
@@ -49,7 +49,7 @@ namespace Tensorflow
             /// <param name="seed"></param>
             /// <param name="name"></param>
             /// <returns></returns>
-            public Tensor truncated_normal(TensorShape shape,
+            public Tensor truncated_normal(Shape shape,
                 float mean = 0.0f,
                 float stddev = 1.0f,
                 TF_DataType dtype = TF_DataType.TF_FLOAT,
@@ -63,7 +63,7 @@ namespace Tensorflow
                 string name = null,
                 TF_DataType output_dtype = TF_DataType.DtInvalid) => random_ops.multinomial(logits, num_samples, seed: seed, name: name, output_dtype: output_dtype);
 
-            public Tensor uniform(TensorShape shape,
+            public Tensor uniform(Shape shape,
                 float minval = 0,
                 float maxval = 1,
                 TF_DataType dtype = TF_DataType.TF_FLOAT,
@@ -71,13 +71,13 @@ namespace Tensorflow
                 string name = null)
             {
                 if (dtype.is_integer())
-                    return random_ops.random_uniform_int(shape, (int)minval, (int)maxval, dtype, seed, name);
+                    return random_ops.random_uniform_int(shape, (int)minval, (int)maxval, seed, name);
                 else
                     return random_ops.random_uniform(shape, minval, maxval, dtype, seed, name);
             }
         }
 
-        public Tensor random_uniform(TensorShape shape,
+        public Tensor random_uniform(Shape shape,
             float minval = 0,
             float maxval = 1,
             TF_DataType dtype = TF_DataType.TF_FLOAT,
@@ -85,7 +85,7 @@ namespace Tensorflow
             string name = null)
             => random.uniform(shape, minval: minval, maxval: maxval, dtype: dtype, seed: seed, name: name);
 
-        public Tensor truncated_normal(TensorShape shape,
+        public Tensor truncated_normal(Shape shape,
             float mean = 0.0f,
             float stddev = 1.0f,
             TF_DataType dtype = TF_DataType.TF_FLOAT,

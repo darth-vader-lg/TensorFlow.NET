@@ -46,12 +46,12 @@ namespace Tensorflow
                 _activation = tf.nn.tanh();
         }
 
-        protected override void build(TensorShape input_shape)
+        protected override void build(Shape input_shape)
         {
             var input_depth = input_shape.dims.Last();
             var h_depth = _num_units;
             _kernel = add_weight(_WEIGHTS_VARIABLE_NAME,
-                shape: new[] { input_depth + h_depth, 4 * _num_units });
+                shape: new int[] { (int)(input_depth + h_depth), 4 * _num_units });
             _bias = add_weight(_BIAS_VARIABLE_NAME,
                 shape: new[] { 4 * _num_units },
                 initializer: tf.zeros_initializer);

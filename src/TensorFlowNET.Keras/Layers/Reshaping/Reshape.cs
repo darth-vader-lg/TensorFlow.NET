@@ -21,21 +21,23 @@ namespace Tensorflow.Keras.Layers
 
         protected override Tensors Call(Tensors inputs, Tensor state = null, bool? training = null)
         {
-            var shapes = new List<object>();
+            var shapes = new List<Tensor>();
             shapes.Add(array_ops.shape(inputs)[0]);
+            var dtype = shapes[0].dtype;
             if (args.TargetShapeObjects != null)
-                shapes.AddRange(args.TargetShapeObjects);
+                // shapes.AddRange(args.TargetShapeObjects);
+                throw new NotImplementedException("");
             if (args.TargetShape != null)
-                args.TargetShape.dims.ToList().ForEach(x => shapes.Add(x));
+                shapes.AddRange(args.TargetShape.dims.Select(x => constant_op.constant(x, dtype)));
             var shape = ops.convert_to_tensor(shapes);
 
             var result = array_ops.reshape(inputs, shape);
             if (!tf.Context.executing_eagerly())
-                result.set_shape(ComputeOutputShape(inputs.shape));
+                result.shape = ComputeOutputShape(inputs.shape);
             return result;
         }
 
-        public override TensorShape ComputeOutputShape(TensorShape input_shape)
+        public override Shape ComputeOutputShape(Shape input_shape)
         {
             if (input_shape.dims.Skip(1).Contains(-1))
             {
@@ -43,7 +45,7 @@ namespace Tensorflow.Keras.Layers
             }
             else
             {
-                input_shape = input_shape.dims[0];
+                input_shape = new Shape(input_shape.dims[0]);
                 var output_shape = input_shape.concatenate(args.TargetShape.dims);
                 return output_shape;
             }
