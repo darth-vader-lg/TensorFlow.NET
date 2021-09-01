@@ -2,8 +2,8 @@
 <Project>
 
   <PropertyGroup>
-    <TensorFlowBindingVersion>0.60.1</TensorFlowBindingVersion>
-    <TensorFlowKerasVersion>0.6.1</TensorFlowKerasVersion>
+    <TensorFlowBindingVersion>0.60.2</TensorFlowBindingVersion>
+    <TensorFlowKerasVersion>0.6.2</TensorFlowKerasVersion>
     <TensorFlowNETRecommendersVersion>0.0.1</TensorFlowNETRecommendersVersion>
     <TensorFlowNETTextVersion>0.0.1</TensorFlowNETTextVersion>
   </PropertyGroup>
